@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Odd One Out</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#0d0d0f;--surface:#16161a;--surface2:#1e1e24;--border:#2a2a32;
+  --accent:#f0e040;--accent2:#ff5f40;--accent3:#40d9a0;
+  --text:#f0eff5;--muted:#7a7a8c;--correct:#40d9a0;--wrong:#ff5f40;
+  --gold:#fbbf24;--purple:#a78bfa;--token:#f59e0b;
+  --fd:'Syne',sans-serif;--fb:'DM Sans',sans-serif;
+  --r:16px;--rb:24px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--fb);overflow:hidden;touch-action:manipulation}
+#app{width:100%;height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;overflow:hidden}
+
+/* ── SCREENS ── */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform:translateY(14px);overflow-y:auto}
+.screen.active{opacity:1;pointer-events:all;transform:translateY(0)}
+.screen::-webkit-scrollbar{display:none}
+
+/* ── GLOBAL TOP BAR (wallet + profile) ── */
+.top-bar{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:400;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;pointer-events:none}
+.top-bar.show{pointer-events:all}
+.wallet-pill{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-family:var(--fd);font-size:13px;font-weight:700;color:var(--token);cursor:pointer;transition:transform .08s}
+.wallet-pill:active{transform:scale(.96)}
+.wallet-pill .coin{font-size:14px}
+.profile-pill{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 10px;cursor:pointer;transition:transform .08s}
+.profile-pill:active{transform:scale(.96)}
+.profile-avatar{font-size:16px}
+.profile-name{font-size:12px;font-weight:600;color:var(--text);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── START ── */
+#screen-start{justify-content:flex-end;background:var(--bg);overflow:hidden}
+.start-bg{position:absolute;inset:0;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(10,1fr);gap:4px;padding:4px;opacity:.06;pointer-events:none}
+.start-bg-cell{border-radius:8px;background:var(--accent)}
+.start-bg-cell:nth-child(odd){background:var(--accent2)}
+.start-bg-cell:nth-child(3n){background:var(--accent3)}
+.start-hero{position:relative;z-index:1;padding:72px 28px 0;flex:1;display:flex;flex-direction:column;justify-content:center}
+.start-eyebrow{font-size:11px;font-weight:600;letter-spacing:.15em;color:var(--accent);text-transform:uppercase;margin-bottom:12px}
+.start-title{font-family:var(--fd);font-size:clamp(40px,11vw,58px);font-weight:800;line-height:.95;color:var(--text)}
+.start-title span{color:var(--accent);display:block}
+.start-sub{margin-top:16px;font-size:14px;color:var(--muted);line-height:1.5;max-width:280px}
+.live-pill{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-top:12px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--correct);animation:livePulse 1.4s ease-in-out infinite}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.3}}
+.start-actions{position:relative;z-index:1;padding:20px 24px 36px;display:flex;flex-direction:column;gap:9px}
+
+/* ── BUTTONS ── */
+.btn-primary{background:var(--accent);color:#0d0d0f;border:none;border-radius:var(--rb);padding:16px 20px;font-family:var(--fd);font-size:15px;font-weight:700;cursor:pointer;transition:transform .08s,opacity .08s;display:flex;align-items:center;justify-content:space-between;letter-spacing:.02em}
+.btn-primary:active{transform:scale(.96);opacity:.9}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1.5px solid var(--border);border-radius:var(--rb);padding:16px 20px;font-family:var(--fd);font-size:15px;font-weight:700;cursor:pointer;transition:transform .08s;display:flex;align-items:center;justify-content:space-between;letter-spacing:.02em}
+.btn-secondary:active{transform:scale(.96)}
+.btn-challenge{background:#1a1220;color:#e879f9;border:1.5px solid rgba(232,121,249,.25);border-radius:var(--rb);padding:16px 20px;font-family:var(--fd);font-size:15px;font-weight:700;cursor:pointer;transition:transform .08s;display:flex;align-items:center;justify-content:space-between;letter-spacing:.02em}
+.btn-challenge:active{transform:scale(.96)}
+.btn-tourn{background:#0f1a2e;color:var(--accent);border:1.5px solid rgba(240,224,64,.25);border-radius:var(--rb);padding:16px 20px;font-family:var(--fd);font-size:15px;font-weight:700;cursor:pointer;transition:transform .08s;display:flex;align-items:center;justify-content:space-between;letter-spacing:.02em}
+.btn-tourn:active{transform:scale(.96)}
+.btn-token{background:rgba(245,158,11,.1);color:var(--token);border:1.5px solid rgba(245,158,11,.3);border-radius:var(--rb);padding:16px 20px;font-family:var(--fd);font-size:15px;font-weight:700;cursor:pointer;transition:transform .08s;display:flex;align-items:center;justify-content:space-between;letter-spacing:.02em}
+.btn-token:active{transform:scale(.96)}
+.btn-danger{background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:var(--rb);padding:16px 20px;font-family:var(--fd);font-size:15px;font-weight:700;cursor:pointer;transition:transform .08s;display:flex;align-items:center;justify-content:center}
+.btn-danger:active{transform:scale(.96)}
+.btn-share-wa{background:#25d366;color:#fff;border:none;border-radius:var(--r);padding:14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:transform .08s;flex:1}
+.btn-share-tg{background:#229ed9;color:#fff;border:none;border-radius:var(--r);padding:14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:transform .08s;flex:1}
+.btn-share-copy{background:var(--surface2);color:var(--text);border:1.5px solid var(--border);border-radius:var(--r);padding:14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:transform .08s;flex:1}
+.btn-share-wa:active,.btn-share-tg:active,.btn-share-copy:active{transform:scale(.96)}
+.btn-arrow{width:30px;height:30px;background:rgba(0,0,0,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.btn-secondary .btn-arrow,.btn-challenge .btn-arrow,.btn-tourn .btn-arrow,.btn-token .btn-arrow{background:rgba(255,255,255,.06)}
+.btn-badge{font-size:9px;font-weight:700;letter-spacing:.07em;border-radius:20px;padding:2px 7px;text-transform:uppercase;flex-shrink:0}
+.btn-badge.hot{background:var(--accent2);color:#fff}
+.btn-badge.daily{background:#7c3aed;color:#fff}
+.btn-badge.monthly{background:var(--gold);color:#0d0d0f}
+.btn-left{display:flex;align-items:center;gap:7px}
+.cost-tag{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--token);font-weight:700;opacity:.8}
+
+/* ── GAME HEADER ── */
+#screen-game{background:var(--bg);overflow:hidden}
+.game-header{padding:52px 20px 0;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.game-meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.game-mode-label{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.game-meta-right{display:flex;align-items:center;gap:6px}
+.game-level-badge{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+.game-level-badge.prize{color:var(--accent);border-color:rgba(240,224,64,.4)}
+.game-level-badge.tourn{color:var(--purple);border-color:rgba(167,139,250,.4)}
+.game-level-badge.monthly{color:var(--gold);border-color:rgba(251,191,36,.4)}
+.diff-tag{border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
+.diff-tag.easy{background:rgba(64,217,160,.1);color:var(--correct)}
+.diff-tag.medium{background:rgba(240,224,64,.08);color:var(--accent)}
+.diff-tag.hard{background:rgba(255,95,64,.1);color:var(--accent2)}
+.diff-tag.expert{background:rgba(167,139,250,.1);color:var(--purple)}
+
+/* combo */
+.combo-row{display:flex;align-items:center;gap:7px;min-height:16px}
+.combo-pips{display:flex;gap:3px}
+.combo-pip{width:9px;height:9px;border-radius:50%;background:var(--border);transition:background .12s,transform .12s}
+.combo-pip.lit{background:var(--accent2);transform:scale(1.2)}
+.combo-mult{font-family:var(--fd);font-size:12px;font-weight:800;color:var(--accent);opacity:0;transition:opacity .2s}
+.combo-mult.show{opacity:1}
+.combo-lbl{font-family:var(--fd);font-size:12px;font-weight:700;color:var(--accent2);opacity:0;transition:opacity .2s}
+.combo-lbl.show{opacity:1}
+
+/* progress + timer */
+.prog-wrap{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.prog-bar{height:100%;border-radius:2px;background:var(--accent);transition:width .45s cubic-bezier(.4,0,.2,1)}
+.prog-bar.prize-c{background:linear-gradient(90deg,var(--accent3),var(--accent))}
+.prog-bar.tourn-c{background:linear-gradient(90deg,#7c3aed,var(--purple))}
+.prog-bar.monthly-c{background:linear-gradient(90deg,var(--gold),var(--accent2))}
+.prog-bar.free-c{background:linear-gradient(90deg,var(--accent3),var(--accent),var(--accent2))}
+.timer-row{display:flex;align-items:center;gap:8px}
+.timer-wrap{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;flex:1}
+.timer-bar{height:100%;border-radius:3px;background:var(--accent);transition:width .1s linear,background .3s}
+.timer-bar.urgent{background:var(--accent2)}
+.timer-txt{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--muted);transition:color .3s;min-width:18px;text-align:right}
+.timer-txt.urgent{color:var(--accent2)}
+
+/* ── GAME BODY ── */
+.game-body{flex:1;overflow-y:auto;padding:10px 18px 0;display:flex;flex-direction:column;gap:9px}
+.game-body::-webkit-scrollbar{display:none}
+.q-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rb);padding:13px 16px;display:flex;flex-direction:column;justify-content:center;flex-shrink:0;transition:border-color .16s,box-shadow .16s}
+.q-card.glow{border-color:var(--correct);box-shadow:0 0 0 1px rgba(64,217,160,.1)}
+.q-card.flash{border-color:var(--wrong)}
+.q-num{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.q-text{font-family:var(--fd);font-size:clamp(13px,3.6vw,17px);font-weight:700;line-height:1.25;color:var(--text)}
+
+/* ── TEXT OPTIONS ── */
+.opt-grid{display:grid;gap:8px}
+.opt-grid.g6{grid-template-columns:1fr 1fr}
+.opt-grid.g3{grid-template-columns:1fr}
+.opt-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 10px;font-family:var(--fb);font-size:14px;font-weight:500;color:var(--text);cursor:pointer;text-align:center;transition:background .08s,border-color .1s,transform .08s;min-height:50px;display:flex;align-items:center;justify-content:center;line-height:1.2;word-break:break-word;position:relative;overflow:hidden}
+.opt-btn:active{transform:scale(.95)}
+.opt-btn.correct{background:rgba(64,217,160,.12);border-color:var(--correct);color:var(--correct)}
+.opt-btn.wrong{background:rgba(255,95,64,.12);border-color:var(--wrong);color:var(--wrong)}
+.opt-btn.reveal{background:rgba(64,217,160,.06);border-color:var(--correct);color:var(--correct);opacity:.7}
+.opt-btn.disabled{pointer-events:none}
+@keyframes oPop{0%{transform:scale(1)}35%{transform:scale(.93)}100%{transform:scale(1)}}
+.opt-btn.pop{animation:oPop .13s ease}
+
+/* ── EMOJI CARDS ── */
+.emj-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.emj-card{position:relative;background:var(--surface);border:2px solid var(--border);border-radius:var(--r);cursor:pointer;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:border-color .14s,transform .08s;overflow:hidden}
+.emj-card:active{transform:scale(.95)}
+.emj-card .ec-e{font-size:clamp(26px,7.5vw,36px);line-height:1;pointer-events:none;transition:transform .14s}
+.emj-card .ec-l{font-size:11px;font-weight:600;color:var(--muted);pointer-events:none;padding:0 5px;text-align:center}
+.emj-card .ec-ck{position:absolute;top:5px;right:6px;width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;opacity:0;transform:scale(.4);transition:opacity .15s,transform .2s cubic-bezier(.34,1.56,.64,1)}
+.emj-card .ec-tn{position:absolute;inset:0;opacity:0;border-radius:calc(var(--r) - 2px);transition:opacity .14s;pointer-events:none}
+.emj-card.correct{border-color:var(--correct)}
+.emj-card.correct .ec-tn{background:rgba(64,217,160,.2);opacity:1}
+.emj-card.correct .ec-ck{background:var(--correct);color:#0d0d0f;opacity:1;transform:scale(1)}
+.emj-card.correct .ec-ck::before{content:'✓'}
+.emj-card.correct .ec-e{transform:scale(1.12)}
+.emj-card.wrong{border-color:var(--wrong)}
+.emj-card.wrong .ec-tn{background:rgba(255,95,64,.2);opacity:1}
+.emj-card.wrong .ec-ck{background:var(--wrong);color:#fff;opacity:1;transform:scale(1)}
+.emj-card.wrong .ec-ck::before{content:'✗'}
+.emj-card.reveal{border-color:var(--correct)}
+.emj-card.reveal .ec-tn{background:rgba(64,217,160,.1);opacity:1}
+.emj-card.disabled{pointer-events:none}
+
+/* ── THEY ALL BELONG ── */
+.tab-btn{background:var(--surface2);border:1.5px dashed var(--border);border-radius:var(--r);padding:11px;font-family:var(--fb);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .1s;display:flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0}
+.tab-btn:active{transform:scale(.97)}
+.tab-btn.correct{background:rgba(64,217,160,.12);border-color:var(--correct);color:var(--correct);border-style:solid}
+.tab-btn.wrong{background:rgba(255,95,64,.12);border-color:var(--wrong);color:var(--wrong);border-style:solid}
+.tab-btn.reveal{background:rgba(64,217,160,.06);border-color:var(--correct);color:var(--correct);opacity:.7;border-style:solid}
+
+/* ── FEEDBACK ── */
+.fb-card{background:var(--surface2);border-radius:var(--r);padding:11px 14px;font-size:13px;color:var(--muted);line-height:1.5;border-left:3px solid var(--border);transition:opacity .22s,transform .22s;opacity:0;transform:translateY(6px);flex-shrink:0}
+.fb-card.show{opacity:1;transform:translateY(0)}
+.fb-card.ok{border-left-color:var(--correct)}
+.fb-card.no{border-left-color:var(--wrong)}
+.fb-res{font-family:var(--fd);font-size:13px;font-weight:700;margin-bottom:3px}
+.fb-res.ok{color:var(--correct)}
+.fb-res.no{color:var(--wrong)}
+
+/* ── FOOTER DOTS ── */
+.game-footer{padding:6px 20px 18px;flex-shrink:0}
+.dots{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:background .2s,transform .16s}
+.dot.ok{background:var(--correct)}
+.dot.no{background:var(--wrong)}
+.dot.cur{background:var(--accent);box-shadow:0 0 0 2px rgba(240,224,64,.25);transform:scale(1.25)}
+
+/* ── MICRO FLOATERS ── */
+.mf{position:fixed;pointer-events:none;z-index:500;font-family:var(--fd);font-size:17px;font-weight:800}
+@keyframes mfUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-50px) scale(.8)}}
+.mf.go{animation:mfUp .6s ease forwards}
+.screen-flash{position:fixed;inset:0;pointer-events:none;z-index:300;opacity:0;transition:opacity .14s}
+.screen-flash.ok{background:rgba(64,217,160,.07);opacity:1}
+.screen-flash.no{background:rgba(255,95,64,.08);opacity:1}
+
+/* ── RESULT ── */
+#screen-result{background:var(--bg);justify-content:flex-end}
+.res-hero{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:72px 24px 0;text-align:center}
+.res-emoji{font-size:56px;margin-bottom:11px;animation:bIn .4s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes bIn{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+.res-title{font-family:var(--fd);font-size:34px;font-weight:800;line-height:1;margin-bottom:5px}
+.res-sub{font-size:14px;color:var(--muted);line-height:1.5;max-width:280px}
+.beat-bar{margin-top:16px;width:100%;background:var(--surface);border-radius:var(--r);padding:12px 14px;text-align:left}
+.beat-lbl{font-size:10px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em}
+.beat-track{height:7px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.beat-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent3),var(--accent));width:0%;transition:width .9s .3s ease}
+.beat-num{font-family:var(--fd);font-size:21px;font-weight:800;color:var(--accent);margin-top:5px}
+.beat-num span{font-size:13px;font-weight:400;color:var(--muted)}
+.near-miss{background:rgba(255,95,64,.08);border:1px solid rgba(255,95,64,.2);border-radius:var(--r);padding:11px 14px;margin-top:11px;width:100%}
+.near-miss-t{font-size:13px;color:var(--accent2);font-weight:600;line-height:1.4;text-align:center}
+.score-row{display:flex;gap:8px;margin-top:13px;width:100%}
+.score-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;text-align:center;flex:1}
+.score-tile-n{font-family:var(--fd);font-size:24px;font-weight:800;color:var(--accent)}
+.score-tile-l{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+/* token earned badge */
+.tokens-earned{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:var(--r);padding:10px 14px;width:100%}
+.tokens-earned-txt{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--token)}
+/* share section */
+.share-section{margin-top:13px;width:100%}
+.share-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;text-align:center}
+.share-btns{display:flex;gap:8px}
+.res-actions{padding:14px 24px 34px;display:flex;flex-direction:column;gap:8px}
+
+/* ── DOUBLE ── */
+#screen-double{background:var(--bg);justify-content:space-between}
+.dbl-hero{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:72px 28px 24px;text-align:center}
+.dbl-icon{font-size:64px;margin-bottom:14px;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.dbl-title{font-family:var(--fd);font-size:30px;font-weight:800;line-height:1.1;margin-bottom:8px;color:var(--accent)}
+.dbl-desc{font-size:14px;color:var(--muted);line-height:1.6;max-width:300px}
+.dbl-score{font-family:var(--fd);font-size:48px;font-weight:800;color:var(--text);margin:16px 0 4px}
+.dbl-lbl{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.dbl-actions{padding:0 24px 38px;display:flex;flex-direction:column;gap:8px}
+
+/* ── LOBBY (list of active competitions) ── */
+#screen-lobby{background:var(--bg)}
+.lobby-header{padding:12px 20px 16px;flex-shrink:0}
+.lobby-title{font-family:var(--fd);font-size:24px;font-weight:800;margin-bottom:3px}
+.lobby-sub{font-size:13px;color:var(--muted)}
+.lobby-body{flex:1;overflow-y:auto;padding:0 20px 20px;display:flex;flex-direction:column;gap:10px}
+.comp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rb);padding:16px;cursor:pointer;transition:border-color .15s,transform .08s;position:relative;overflow:hidden}
+.comp-card:active{transform:scale(.98)}
+.comp-card.monthly-card{border-color:rgba(251,191,36,.25);background:linear-gradient(135deg,#16161a 60%,#1a1510)}
+.comp-card.challenge-card{border-color:rgba(232,121,249,.2);background:linear-gradient(135deg,#16161a 60%,#150f1a)}
+.comp-card.daily-card{border-color:rgba(167,139,250,.2);background:linear-gradient(135deg,#16161a 60%,#0f0f1a)}
+.comp-type-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:20px;padding:2px 8px;margin-bottom:8px}
+.comp-type-badge.monthly{background:rgba(251,191,36,.12);color:var(--gold)}
+.comp-type-badge.challenge{background:rgba(232,121,249,.1);color:#e879f9}
+.comp-type-badge.daily{background:rgba(167,139,250,.1);color:var(--purple)}
+.comp-name{font-family:var(--fd);font-size:18px;font-weight:800;color:var(--text);margin-bottom:6px}
+.comp-prize-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.comp-prize-icon{font-size:22px}
+.comp-prize-txt{font-size:14px;font-weight:600;color:var(--text)}
+.comp-prize-val{font-size:12px;color:var(--muted)}
+.comp-meta{display:flex;align-items:center;justify-content:space-between}
+.comp-timer{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.comp-timer-val{font-family:var(--fd);font-weight:700;color:var(--text)}
+.comp-players{font-size:12px;color:var(--muted)}
+.comp-enter-btn{display:flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--text);margin-top:10px;cursor:pointer;transition:background .1s}
+.comp-enter-btn.monthly{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:var(--gold)}
+.comp-enter-btn.challenge{background:rgba(232,121,249,.08);border-color:rgba(232,121,249,.25);color:#e879f9}
+.comp-enter-btn.daily{background:rgba(167,139,250,.08);border-color:rgba(167,139,250,.25);color:var(--purple)}
+
+/* ── TOURNAMENT LOBBY (single comp) ── */
+#screen-tourn-lobby{background:var(--bg)}
+.tl-header{padding:8px 22px 0;flex-shrink:0}
+.tl-type{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:20px;padding:3px 10px;margin-bottom:10px}
+.tl-type.monthly{background:rgba(251,191,36,.12);color:var(--gold)}
+.tl-type.challenge{background:rgba(232,121,249,.1);color:#e879f9}
+.tl-type.daily{background:rgba(167,139,250,.1);color:var(--purple)}
+.tl-name{font-family:var(--fd);font-size:26px;font-weight:800;margin-bottom:4px}
+.tl-body{flex:1;overflow-y:auto;padding:16px 22px 20px;display:flex;flex-direction:column;gap:12px}
+/* prize display */
+.prize-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--rb);padding:16px;display:flex;align-items:center;gap:14px}
+.prize-box.physical{border-color:rgba(251,191,36,.25)}
+.prize-box.tokens-prize{border-color:rgba(245,158,11,.25)}
+.prize-icon{font-size:36px;flex-shrink:0}
+.prize-info .prize-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.prize-info .prize-name{font-family:var(--fd);font-size:18px;font-weight:800;color:var(--text)}
+.prize-info .prize-value{font-size:13px;color:var(--muted);margin-top:2px}
+/* podium prizes */
+.podium-row{display:flex;gap:8px}
+.podium-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;flex:1;text-align:center}
+.podium-tile.gold{border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.04)}
+.podium-tile.silver{border-color:rgba(209,213,219,.2)}
+.podium-tile.bronze{border-color:rgba(205,124,47,.2)}
+.podium-rank{font-size:18px;margin-bottom:4px}
+.podium-prize{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--text)}
+.podium-sub{font-size:10px;color:var(--muted);margin-top:2px}
+/* stats row */
+.tl-stats{display:flex;gap:8px}
+.tl-stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 12px;flex:1;text-align:center}
+.tl-stat-n{font-family:var(--fd);font-size:19px;font-weight:800;color:var(--accent)}
+.tl-stat-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+/* countdown */
+.countdown-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:13px 16px;display:flex;align-items:center;justify-content:space-between}
+.countdown-lbl{font-size:12px;color:var(--muted)}
+.countdown-val{font-family:var(--fd);font-size:18px;font-weight:800;color:var(--text)}
+.tl-actions{padding:12px 22px 36px;display:flex;flex-direction:column;gap:8px}
+/* not enough tokens warning */
+.token-warning{background:rgba(255,95,64,.08);border:1px solid rgba(255,95,64,.2);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--accent2);text-align:center;display:none}
+
+/* ── LEADERBOARD ── */
+#screen-leaderboard{background:var(--bg)}
+.lb-header{padding:8px 20px 0;flex-shrink:0}
+.lb-title{font-family:var(--fd);font-size:24px;font-weight:800;margin-bottom:3px}
+.lb-title-sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+.lb-tabs{display:flex;gap:6px;margin-bottom:0}
+.lb-tab{flex:1;padding:8px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;text-align:center;transition:all .15s}
+.lb-tab.active{background:var(--surface);border-color:var(--accent);color:var(--accent)}
+.lb-body{flex:1;overflow-y:auto;padding:12px 20px 20px}
+.lb-row{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:13px;margin-bottom:7px;background:var(--surface);border:1px solid var(--border)}
+.lb-row.you{background:rgba(240,224,64,.06);border-color:rgba(240,224,64,.22);transform:scale(1.02)}
+.lb-rank{font-family:var(--fd);font-size:16px;font-weight:800;min-width:24px;color:var(--muted)}
+.lb-flag{font-size:18px;min-width:24px;text-align:center}
+.lb-info{flex:1;min-width:0}
+.lb-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-name.you{color:var(--accent)}
+.lb-achievements{display:flex;gap:3px;margin-top:2px}
+.lb-ach{font-size:13px}
+.lb-right{text-align:right;flex-shrink:0}
+.lb-score{font-family:var(--fd);font-size:16px;font-weight:800}
+.lb-actions{padding:10px 20px 36px;display:flex;flex-direction:column;gap:8px}
+
+/* ── PROFILE ── */
+#screen-profile{background:var(--bg)}
+.prof-header{padding:68px 22px 16px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;text-align:center}
+.prof-avatar-big{font-size:52px;margin-bottom:8px}
+.prof-username{font-family:var(--fd);font-size:22px;font-weight:800;margin-bottom:3px}
+.prof-flag-country{font-size:14px;color:var(--muted);margin-bottom:10px}
+.prof-achievements-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.ach-badge{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px 10px;display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600}
+.ach-badge .ach-icon{font-size:16px}
+.ach-badge .ach-name{color:var(--text)}
+.ach-badge .ach-desc{font-size:10px;color:var(--muted)}
+.prof-body{flex:1;overflow-y:auto;padding:0 22px 20px;display:flex;flex-direction:column;gap:10px}
+.prof-stat-row{display:flex;gap:8px}
+.prof-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;flex:1;text-align:center}
+.prof-stat-n{font-family:var(--fd);font-size:22px;font-weight:800;color:var(--accent)}
+.prof-stat-l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
+.prof-token-row{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.prof-token-left{display:flex;align-items:center;gap:8px}
+.prof-token-bal{font-family:var(--fd);font-size:24px;font-weight:800;color:var(--token)}
+.prof-token-lbl{font-size:12px;color:var(--muted)}
+.prof-actions{padding:10px 22px 36px;display:flex;flex-direction:column;gap:8px}
+/* edit profile fields */
+.field-row{display:flex;flex-direction:column;gap:5px}
+.field-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.field-input{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;font-family:var(--fb);font-size:14px;color:var(--text);outline:none;width:100%;transition:border-color .15s}
+.field-input:focus{border-color:var(--accent)}
+.field-select{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;font-family:var(--fb);font-size:14px;color:var(--text);outline:none;width:100%;cursor:pointer;-webkit-appearance:none}
+.field-select:focus{border-color:var(--accent)}
+
+/* ── TOKEN SHOP ── */
+#screen-shop{background:var(--bg)}
+.shop-header{padding:68px 22px 16px;flex-shrink:0}
+.shop-title{font-family:var(--fd);font-size:24px;font-weight:800;margin-bottom:3px}
+.shop-sub{font-size:13px;color:var(--muted)}
+.shop-body{flex:1;overflow-y:auto;padding:0 22px 20px;display:flex;flex-direction:column;gap:10px}
+.token-pack{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rb);padding:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color .15s,transform .08s}
+.token-pack:active{transform:scale(.98)}
+.token-pack.best{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.04)}
+.token-pack-left{display:flex;align-items:center;gap:12px}
+.token-pack-icon{font-size:28px}
+.token-pack-amount{font-family:var(--fd);font-size:20px;font-weight:800;color:var(--token)}
+.token-pack-bonus{font-size:11px;color:var(--correct);font-weight:600;margin-top:1px}
+.token-pack-price{font-family:var(--fd);font-size:18px;font-weight:800;color:var(--text)}
+.best-badge{font-size:9px;font-weight:700;background:var(--token);color:#0d0d0f;border-radius:20px;padding:2px 7px;text-transform:uppercase;display:inline-block;margin-bottom:4px}
+/* earn tokens section */
+.earn-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--rb);padding:14px}
+.earn-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.earn-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
+.earn-row:last-child{border-bottom:none}
+.earn-left{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500}
+.earn-tokens{font-family:var(--fd);font-size:13px;font-weight:700;color:var(--token)}
+.shop-actions{padding:10px 22px 36px}
+
+/* ── AUTH ── */
+#screen-auth{background:var(--bg);justify-content:center}
+.auth-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px;gap:12px}
+.auth-title{font-family:var(--fd);font-size:26px;font-weight:800;text-align:center;margin-bottom:4px}
+.auth-sub{font-size:14px;color:var(--muted);text-align:center;margin-bottom:8px}
+.auth-divider{text-align:center;font-size:12px;color:var(--muted);margin:4px 0}
+.auth-actions{padding:0 24px 36px;display:flex;flex-direction:column;gap:8px}
+
+/* ── BACK / QUIT BUTTONS ── */
+.game-quit-btn{position:absolute;top:58px;right:16px;width:34px;height:34px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:background .1s,transform .08s;z-index:10;color:var(--muted)}
+.game-quit-btn:active{transform:scale(.92)}
+.back-row{padding:64px 20px 0;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.back-btn{display:flex;align-items:center;gap:6px;background:transparent;border:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;padding:6px 0;transition:color .1s}
+.back-btn:active{color:var(--text)}
+.back-btn .back-icon{font-size:18px;line-height:1}
+.back-title{font-family:var(--fd);font-size:15px;font-weight:700;color:var(--text)}
+
+/* ── TOAST / STREAK ── */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--surface2);border:1px solid var(--border);border-radius:40px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--text);opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap;z-index:600}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.streak-badge{position:fixed;top:14px;left:50%;transform:translateX(-50%) scale(.8);background:var(--accent2);color:#fff;border-radius:20px;padding:5px 13px;font-family:var(--fd);font-size:13px;font-weight:700;opacity:0;transition:all .2s cubic-bezier(.34,1.56,.64,1);z-index:500;pointer-events:none;white-space:nowrap}
+.streak-badge.show{opacity:1;transform:translateX(-50%) scale(1)}
+
+/* ── ANIMS ── */
+.slide-in{animation:sIn .2s .04s both}
+@keyframes sIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.shake{animation:shake .3s ease}
+@keyframes cBounce{0%{transform:scale(1)}35%{transform:scale(1.03)}100%{transform:scale(1)}}
+.c-bounce{animation:cBounce .26s ease}
+</style>
+</head>
+<body>
+<div id="app">
+<div class="screen-flash" id="sf"></div>
+
+<!-- GLOBAL TOP BAR -->
+<div class="top-bar" id="topBar">
+  <div class="wallet-pill" onclick="showScreen('shop')">
+    <span class="coin">🪙</span>
+    <span id="walletAmt">0</span>
+  </div>
+  <div class="profile-pill" onclick="showScreen('profile')">
+    <span class="profile-avatar" id="profAvatarSmall">👤</span>
+    <span class="profile-name" id="profNameSmall">Guest</span>
+  </div>
+</div>
+
+<!-- ══ START ══ -->
+<div id="screen-start" class="screen active">
+  <div class="start-bg" id="startBg"></div>
+  <div class="start-hero">
+    <div class="start-eyebrow">Brain Test</div>
+    <h1 class="start-title">Which<span>Doesn't<br>Belong?</span></h1>
+    <p class="start-sub">6 options. One odd one out. Or maybe none. 10 seconds.</p>
+    <div class="live-pill"><div class="live-dot"></div><span id="liveCount">2,847 playing now</span></div>
+  </div>
+  <div class="start-actions">
+    <button class="btn-primary" onclick="startGame('free')">
+      <span>Free Play</span><span class="btn-arrow">→</span>
+    </button>
+    <button class="btn-challenge" onclick="startGame('prize')">
+      <div class="btn-left"><span>Challenge Mode</span><span class="btn-badge hot">🔥 Hot</span></div>
+      <span class="btn-arrow">💀</span>
+    </button>
+    <button class="btn-tourn" onclick="showScreen('lobby')">
+      <div class="btn-left"><span>Tournaments</span><span class="btn-badge monthly">🏆 Live</span></div>
+      <span class="btn-arrow">→</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══ GAME ══ -->
+<div id="screen-game" class="screen">
+  <button class="game-quit-btn" onclick="quitGame()" title="Quit">✕</button>
+  <div class="game-header">
+    <div class="game-meta">
+      <span class="game-mode-label" id="modeLbl">Free Play</span>
+      <div class="game-meta-right">
+        <span class="diff-tag" id="diffTag"></span>
+        <span class="game-level-badge" id="levelBadge">Q 1/12</span>
+      </div>
+    </div>
+    <div class="combo-row">
+      <div class="combo-pips" id="comboPips"></div>
+      <span class="combo-mult" id="comboMult"></span>
+      <span class="combo-lbl" id="comboLbl"></span>
+    </div>
+    <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
+    <div class="timer-row">
+      <div class="timer-wrap"><div class="timer-bar" id="timerBar"></div></div>
+      <span class="timer-txt" id="timerTxt">10</span>
+    </div>
+  </div>
+  <div class="game-body">
+    <div class="q-card" id="qCard">
+      <div class="q-num" id="qNum">Question 1</div>
+      <div class="q-text" id="qText"></div>
+    </div>
+    <div id="optGrid"></div>
+    <div class="tab-btn" id="tabBtn" onclick="pick(-1)"><span>🔗</span><span>They all belong</span></div>
+    <div class="fb-card" id="fbCard"><div class="fb-res" id="fbRes"></div><div id="fbTxt"></div></div>
+  </div>
+  <div class="game-footer"><div class="dots" id="dots"></div></div>
+</div>
+
+<!-- ══ DOUBLE ══ -->
+<div id="screen-double" class="screen">
+  <div class="dbl-hero">
+    <div class="dbl-icon">💰</div>
+    <div class="dbl-title">Double or Nothing</div>
+    <p class="dbl-desc">You crushed all 10 levels. One final question. Get it right — double your score. Wrong — lose everything.</p>
+    <div class="dbl-score" id="dblScore">0</div>
+    <div class="dbl-lbl">Your score</div>
+  </div>
+  <div class="dbl-actions">
+    <button class="btn-primary" onclick="acceptDouble()"><span>Double It</span><span class="btn-arrow">⚡</span></button>
+    <button class="btn-danger" onclick="declineDouble()">Take my score &amp; leave</button>
+  </div>
+</div>
+
+<!-- ══ RESULT ══ -->
+<div id="screen-result" class="screen">
+  <div class="res-hero">
+    <div class="res-emoji" id="resEmoji">🎉</div>
+    <div class="res-title" id="resTitle"></div>
+    <p class="res-sub" id="resSub"></p>
+    <div class="beat-bar" id="beatBar" style="display:none">
+      <div class="beat-lbl">You scored better than</div>
+      <div class="beat-track"><div class="beat-fill" id="beatFill"></div></div>
+      <div class="beat-num" id="beatNum">0% <span>of players</span></div>
+    </div>
+    <div class="near-miss" id="nearMiss" style="display:none"><div class="near-miss-t" id="nearMissT"></div></div>
+    <div class="tokens-earned" id="tokensEarned" style="display:none">
+      <span style="font-size:18px">🪙</span>
+      <span class="tokens-earned-txt" id="tokensEarnedTxt">+10 tokens earned!</span>
+    </div>
+    <div class="score-row" id="scoreRow"></div>
+    <div class="share-section">
+      <div class="share-lbl">Challenge a friend</div>
+      <div class="share-btns">
+        <button class="btn-share-wa" onclick="shareWA()">💬 WhatsApp</button>
+        <button class="btn-share-tg" onclick="shareTG()">✈️ Telegram</button>
+        <button class="btn-share-copy" onclick="shareCopy()">🔗 Copy</button>
+      </div>
+    </div>
+  </div>
+  <div class="res-actions">
+    <button class="btn-primary" id="resPrimary"><span>Play Again</span><span class="btn-arrow">→</span></button>
+    <button class="btn-challenge" onclick="startGame('prize')"><span>Challenge Mode</span><span class="btn-arrow">💀</span></button>
+    <button class="btn-tourn" onclick="showScreen('lobby')"><span>Tournaments</span><span class="btn-arrow">🏆</span></button>
+    <button class="btn-danger" onclick="showScreen('start')">← Home</button>
+  </div>
+</div>
+
+<!-- ══ LOBBY ══ -->
+<div id="screen-lobby" class="screen">
+  <div class="back-row">
+    <button class="back-btn" onclick="showScreen('start')">
+      <span class="back-icon">←</span><span>Back</span>
+    </button>
+    <span class="back-title">Competitions</span>
+  </div>
+  <div class="lobby-header" style="padding-top:12px">
+    <div class="lobby-sub">Enter to win prizes &amp; tokens</div>
+  </div>
+  <div class="lobby-body" id="lobbyBody"></div>
+</div>
+
+<!-- ══ TOURNAMENT LOBBY (single) ══ -->
+<div id="screen-tourn-lobby" class="screen">
+  <div class="back-row">
+    <button class="back-btn" onclick="showScreen('lobby')">
+      <span class="back-icon">←</span><span>Competitions</span>
+    </button>
+  </div>
+  <div class="tl-header" style="padding-top:8px">
+    <div class="tl-type" id="tlType">Monthly</div>
+    <div class="tl-name" id="tlName">May Championship</div>
+  </div>
+  <div class="tl-body">
+    <div id="tlPrizeBox"></div>
+    <div class="tl-stats">
+      <div class="tl-stat"><div class="tl-stat-n" id="tlPlayers">1,247</div><div class="tl-stat-l">Players</div></div>
+      <div class="tl-stat"><div class="tl-stat-n">10</div><div class="tl-stat-l">Questions</div></div>
+      <div class="tl-stat"><div class="tl-stat-n" id="tlCost">80 🪙</div><div class="tl-stat-l">Entry</div></div>
+    </div>
+    <div class="countdown-box">
+      <div class="countdown-lbl">⏳ Time remaining</div>
+      <div class="countdown-val" id="tlCountdown">14d 06:22:11</div>
+    </div>
+    <div class="token-warning" id="tokenWarning">Not enough tokens. Visit the shop to get more.</div>
+    <!-- mini leaderboard preview -->
+    <div id="tlLbPreview"></div>
+  </div>
+  <div class="tl-actions">
+    <button class="btn-primary" id="tlEnterBtn" onclick="enterTournament()"><span>Enter</span><span class="btn-arrow">→</span></button>
+  </div>
+</div>
+
+<!-- ══ LEADERBOARD ══ -->
+<div id="screen-leaderboard" class="screen">
+  <div class="back-row">
+    <button class="back-btn" onclick="showScreen('lobby')">
+      <span class="back-icon">←</span><span>Back</span>
+    </button>
+    <span class="back-title">Leaderboard</span>
+  </div>
+  <div class="lb-header" style="padding-top:12px">
+    <div class="lb-title-sub" id="lbTitleSub">May Championship</div>
+    <div class="lb-tabs">
+      <div class="lb-tab active" onclick="switchLbTab('global',this)">🌍 Global</div>
+      <div class="lb-tab" onclick="switchLbTab('country',this)">🏳️ My Country</div>
+      <div class="lb-tab" onclick="switchLbTab('friends',this)">👥 Friends</div>
+    </div>
+  </div>
+  <div class="lb-body" id="lbBody"></div>
+  <div class="lb-actions">
+    <button class="btn-primary" onclick="shareChallenge()"><span>Challenge Friends</span><span class="btn-arrow">📤</span></button>
+  </div>
+</div>
+
+<!-- ══ PROFILE ══ -->
+<div id="screen-profile" class="screen">
+  <div class="back-row">
+    <button class="back-btn" onclick="showScreen('start')">
+      <span class="back-icon">←</span><span>Back</span>
+    </button>
+    <span class="back-title">My Profile</span>
+  </div>
+  <div class="prof-header" style="padding-top:16px">
+    <div class="prof-avatar-big" id="profAvatarBig">👤</div>
+    <div class="prof-username" id="profUsernameTxt">Guest</div>
+    <div class="prof-flag-country" id="profFlagCountry">🌍 World</div>
+    <div class="prof-achievements-row" id="profAchRow"></div>
+  </div>
+  <div class="prof-body">
+    <div class="prof-token-row">
+      <div class="prof-token-left">
+        <span style="font-size:22px">🪙</span>
+        <div><div class="prof-token-bal" id="profTokenBal">0</div><div class="prof-token-lbl">tokens</div></div>
+      </div>
+      <button class="btn-token" style="padding:9px 14px;border-radius:var(--r);font-size:13px" onclick="showScreen('shop')">
+        <span>Get More</span>
+      </button>
+    </div>
+    <div class="prof-stat-row">
+      <div class="prof-stat"><div class="prof-stat-n" id="pStatGames">0</div><div class="prof-stat-l">Games</div></div>
+      <div class="prof-stat"><div class="prof-stat-n" id="pStatStreak">0</div><div class="prof-stat-l">Streak</div></div>
+      <div class="prof-stat"><div class="prof-stat-n" id="pStatBest">0</div><div class="prof-stat-l">Best Score</div></div>
+    </div>
+    <div class="field-row">
+      <div class="field-lbl">Username</div>
+      <input class="field-input" id="editUsername" type="text" placeholder="Choose a username" maxlength="20">
+    </div>
+    <div class="field-row">
+      <div class="field-lbl">Country</div>
+      <select class="field-select" id="editCountry"></select>
+    </div>
+    <div class="field-row">
+      <div class="field-lbl">Avatar</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="avatarPicker"></div>
+    </div>
+  </div>
+  <div class="prof-actions">
+    <button class="btn-primary" onclick="saveProfile()"><span>Save Profile</span><span class="btn-arrow">✓</span></button>
+  </div>
+</div>
+
+<!-- ══ TOKEN SHOP ══ -->
+<div id="screen-shop" class="screen">
+  <div class="back-row">
+    <button class="back-btn" onclick="showScreen('start')">
+      <span class="back-icon">←</span><span>Back</span>
+    </button>
+    <span class="back-title">Token Shop</span>
+  </div>
+  <div class="shop-header" style="padding-top:12px">
+    <div class="shop-title">🪙 Token Shop</div>
+    <div class="shop-sub">Use tokens to enter tournaments &amp; challenges</div>
+  </div>
+  <div class="shop-body">
+    <div class="token-pack" onclick="buyTokens(100,'$0.99')">
+      <div class="token-pack-left"><div class="token-pack-icon">🪙</div><div><div class="token-pack-amount">100</div><div style="font-size:11px;color:var(--muted)">Starter pack</div></div></div>
+      <div class="token-pack-price">$0.99</div>
+    </div>
+    <div class="token-pack best" onclick="buyTokens(550,'$4.99')">
+      <div class="token-pack-left"><div class="token-pack-icon">🪙</div><div><div><div class="best-badge">Best Value</div></div><div class="token-pack-amount">550</div><div class="token-pack-bonus">+50 bonus tokens</div></div></div>
+      <div class="token-pack-price">$4.99</div>
+    </div>
+    <div class="token-pack" onclick="buyTokens(1200,'$9.99')">
+      <div class="token-pack-left"><div class="token-pack-icon">🪙</div><div><div class="token-pack-amount">1,200</div><div class="token-pack-bonus">+200 bonus tokens</div></div></div>
+      <div class="token-pack-price">$9.99</div>
+    </div>
+    <div class="earn-section">
+      <div class="earn-title">Earn tokens for free</div>
+      <div class="earn-row"><div class="earn-left"><span>📅</span>Daily login</div><div class="earn-tokens">+10 🪙</div></div>
+      <div class="earn-row"><div class="earn-left"><span>🔥</span>7-day streak</div><div class="earn-tokens">+50 🪙</div></div>
+      <div class="earn-row"><div class="earn-left"><span>✅</span>3 correct in a row</div><div class="earn-tokens">+5 🪙</div></div>
+      <div class="earn-row"><div class="earn-left"><span>👥</span>Invite a friend</div><div class="earn-tokens">+100 🪙</div></div>
+      <div class="earn-row"><div class="earn-left"><span>🆕</span>First registration</div><div class="earn-tokens">+50 🪙</div></div>
+    </div>
+  </div>
+  <div class="shop-actions">
+    <button class="btn-danger" onclick="showScreen('start')">Back</button>
+  </div>
+</div>
+
+<!-- ══ AUTH ══ -->
+<div id="screen-auth" class="screen">
+  <div class="auth-body">
+    <div class="auth-title">Join the Game</div>
+    <div class="auth-sub">Create an account to enter tournaments,<br>earn tokens &amp; climb the leaderboard</div>
+    <div class="field-row"><div class="field-lbl">Email</div><input class="field-input" id="authEmail" type="email" placeholder="your@email.com"></div>
+    <div class="field-row"><div class="field-lbl">Password</div><input class="field-input" id="authPass" type="password" placeholder="••••••••"></div>
+    <button class="btn-primary" onclick="doRegister()"><span>Create Account — Free</span><span class="btn-arrow">→</span></button>
+    <div class="auth-divider">Already have an account?</div>
+    <button class="btn-secondary" onclick="doLogin()"><span>Sign In</span><span class="btn-arrow">→</span></button>
+  </div>
+  <div class="auth-actions">
+    <button class="btn-danger" onclick="playAnon()">Continue as Guest (no tournaments)</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="streak-badge" id="streakBadge"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// OPERATOR CONFIG — edit this to configure competitions
+// ═══════════════════════════════════════════════════
+const COMPETITIONS = [
+  {
+    id:'monthly-may',
+    type:'monthly',
+    name:'May Championship',
+    entryCost:80,
+    endDate:'2025-05-31',
+    players:1247,
+    prize:{
+      type:'physical', // 'physical' | 'tokens'
+      icon:'⌚',
+      name:'Apple Watch Series 9',
+      value:'$399',
+      // if type is 'tokens': amount: 2000
+    },
+    podium:[
+      {rank:'🥇',prize:'Apple Watch Series 9',sub:'$399 value'},
+      {rank:'🥈',prize:'AirPods Pro',sub:'$249 value'},
+      {rank:'🥉',prize:'500 Tokens',sub:'🪙 500'},
+    ]
+  },
+  {
+    id:'challenge-science',
+    type:'challenge',
+    name:'Science Genius',
+    entryCost:50,
+    endDate:'2025-05-15',
+    players:342,
+    prize:{
+      type:'tokens',
+      icon:'🪙',
+      name:'500 Tokens',
+      value:'Top 3 win',
+    },
+    podium:[
+      {rank:'🥇',prize:'300 Tokens',sub:'🪙 300'},
+      {rank:'🥈',prize:'150 Tokens',sub:'🪙 150'},
+      {rank:'🥉',prize:'50 Tokens',sub:'🪙 50'},
+    ]
+  },
+  {
+    id:'daily',
+    type:'daily',
+    name:'Daily Tournament',
+    entryCost:20,
+    endDate:null, // auto — ends at midnight
+    players:3841,
+    prize:{
+      type:'tokens',
+      icon:'🪙',
+      name:'200 Tokens',
+      value:'Top 3 win',
+    },
+    podium:[
+      {rank:'🥇',prize:'200 Tokens',sub:'🪙 200'},
+      {rank:'🥈',prize:'100 Tokens',sub:'🪙 100'},
+      {rank:'🥉',prize:'50 Tokens',sub:'🪙 50'},
+    ]
+  },
+];
+
+// ═══════════════════════════════════════════════════
+// QUESTIONS POOL
+// ═══════════════════════════════════════════════════
+const Q = [
+  // EASY (diff 1-2) ─────────────────────────────────
+  {q:"Which doesn't belong?",options:["Apple","Banana","Carrot","Mango","Peach","Grape"],correct:2,exp:"Carrot is a vegetable. All others are fruits.",diff:1},
+  {q:"Which is the odd one out?",options:["Red","Blue","Green","Happy","Yellow","Purple"],correct:3,exp:"Happy is an emotion. All others are colors.",diff:1},
+  {q:"Which doesn't fit?",options:["Monday","Tuesday","January","Thursday","Friday","Sunday"],correct:2,exp:"January is a month. All others are days.",diff:1},
+  {q:"Which doesn't belong?",options:["Dog","Cat","Hamster","Eagle","Rabbit","Parrot"],correct:3,exp:"Eagle is a bird of prey. All others are common pets.",diff:1},
+  {q:"Which is the odd one out?",options:["Circle","Square","Triangle","Sphere","Diamond","Rectangle"],correct:3,exp:"Sphere is 3D. All others are 2D shapes.",diff:1},
+  {q:"Spot the odd one out",options:["Paris","London","Tokyo","Amazon","Berlin","Cairo"],correct:3,exp:"Amazon is a river/company. All others are capitals.",diff:2},
+  {q:"Which doesn't belong?",options:["Piano","Guitar","Violin","Trumpet","Drum","Camera"],correct:5,exp:"Camera is not a musical instrument.",diff:2},
+  {q:"Which one is the odd one out?",options:["Sushi","Pasta","Tacos","Ramen","Dim Sum","Croissant"],correct:5,exp:"Croissant is a pastry. All others are savory meals.",diff:2},
+  {q:"Which doesn't belong?",options:["Earth","Mars","Jupiter","Saturn","Venus","Uranus"],correct:null,exp:"They all belong — all six are planets.",diff:2},
+  {q:"Which one is the odd one out?",options:["Rose","Tulip","Daisy","Lily","Orchid","Sunflower"],correct:null,exp:"They all belong — all six are flowers.",diff:2},
+  // MEDIUM (diff 3-4) ───────────────────────────────
+  {q:"Which doesn't fit?",options:["Oxygen","Nitrogen","Hydrogen","Carbon","Iron","Helium"],correct:4,exp:"Iron is a solid metal. All others are gases.",diff:3},
+  {q:"Which one doesn't belong?",options:["Shakespeare","Hemingway","Picasso","Tolkien","Austen","Orwell"],correct:2,exp:"Picasso was a painter. All others are authors.",diff:3},
+  {q:"Which is the odd one out?",options:["Mercury","Venus","Mars","Moon","Jupiter","Saturn"],correct:3,exp:"Moon is Earth's satellite, not a planet.",diff:3},
+  {q:"Which doesn't belong?",options:["Frog","Salamander","Newt","Axolotl","Lizard","Toad"],correct:4,exp:"Lizard is a reptile. All others are amphibians.",diff:3},
+  {q:"Which is the odd one out?",options:["Newton","Einstein","Curie","Beethoven","Darwin","Tesla"],correct:3,exp:"Beethoven was a composer. All others were scientists.",diff:3},
+  {q:"Which doesn't fit?",options:["Amygdala","Hippocampus","Cerebellum","Cortex","Hypothalamus","Tibia"],correct:5,exp:"Tibia is a leg bone. All others are brain regions.",diff:3},
+  {q:"Spot the odd one out",options:["Turing","Von Neumann","Shannon","Dijkstra","Hopper","Churchill"],correct:5,exp:"Churchill was a politician. All others are CS pioneers.",diff:3},
+  {q:"Which one doesn't belong?",options:["Fear","Joy","Sadness","Anger","Disgust","Surprise"],correct:null,exp:"They all belong — all six are basic human emotions.",diff:3},
+  {q:"Which doesn't belong?",options:["JPEG","PNG","GIF","MP4","BMP","TIFF"],correct:3,exp:"MP4 is video. All others are image formats.",diff:4},
+  {q:"Which doesn't belong?",options:["RAM","CPU","GPU","SSD","USB","ROM"],correct:4,exp:"USB is a port. All others are internal components.",diff:4},
+  {q:"Which one doesn't belong?",options:["Monet","Dali","Warhol","Rembrandt","Banksy","Picasso"],correct:4,exp:"Banksy is anonymous street art. All others are fine art painters.",diff:4},
+  {q:"Spot the odd one out",options:["Hamlet","Othello","Macbeth","King Lear","The Tempest","Don Quixote"],correct:5,exp:"Don Quixote is Cervantes. All others are Shakespeare.",diff:4},
+  {q:"Which is the odd one out?",options:["Violin","Cello","Harp","Viola","Double Bass","Oboe"],correct:5,exp:"Oboe is a woodwind. All others are strings.",diff:4},
+  {q:"Which doesn't fit here?",options:["Jazz","Blues","Soul","Funk","R&B","Gospel"],correct:null,exp:"They all belong — all six are African American musical genres.",diff:4},
+  {q:"Which doesn't fit?",options:["Picasso","Monet","Da Vinci","Banksy","Warhol","Basquiat"],correct:null,exp:"They all belong — all six are famous visual artists.",diff:4},
+  // HARD (diff 5-6) ─────────────────────────────────
+  {q:"Which one is different?",options:["Mitochondria","Nucleus","Ribosome","Chloroplast","Flagella","Centrosome"],correct:3,exp:"Chloroplast is plant-only. All others are in animal cells.",diff:5},
+  {q:"Which doesn't belong?",options:["Ethernet","WiFi","Bluetooth","Fiber","USB","NFC"],correct:4,exp:"USB is a data interface, not a networking protocol.",diff:5},
+  {q:"Which doesn't fit?",options:["Sodium","Potassium","Calcium","Chlorine","Magnesium","Phosphorus"],correct:3,exp:"Chlorine is a halogen. All others are metals.",diff:5},
+  {q:"Which one doesn't belong?",options:["Joule","Watt","Newton","Pascal","Kelvin","Farad"],correct:4,exp:"Kelvin measures temperature. All others are mechanical or electrical.",diff:5},
+  {q:"Which doesn't belong?",options:["Nile","Amazon","Yangtze","Congo","Rhine","Mississippi"],correct:4,exp:"Rhine is short. All others are among the world's longest.",diff:5},
+  {q:"Spot the odd one out",options:["React","Vue","Angular","Svelte","Ember","Backbone"],correct:null,exp:"They all belong — all six are JavaScript frontend frameworks.",diff:5},
+  {q:"Which doesn't belong?",options:["Freud","Jung","Adler","Skinner","Maslow","Erikson"],correct:null,exp:"They all belong — all six are foundational psychology figures.",diff:5},
+  {q:"Which is the odd one out?",options:["Pluto","Ceres","Eris","Haumea","Makemake","Sedna"],correct:null,exp:"They all belong — all six are classified dwarf planets.",diff:5},
+  {q:"Spot the odd one out",options:["Kafka","Nietzsche","Dostoevsky","Camus","Sartre","Faulkner"],correct:5,exp:"Faulkner was American. All others are European existentialists.",diff:6},
+  {q:"Which is the odd one out?",options:["Sonata","Fugue","Concerto","Opera","Symphony","Ballet"],correct:5,exp:"Ballet is dance. All others are musical forms.",diff:6},
+  {q:"Which is the odd one out?",options:["Taoism","Buddhism","Hinduism","Confucianism","Shintoism","Zoroastrianism"],correct:5,exp:"Zoroastrianism is Persian. All others originated in Asia.",diff:6},
+  {q:"Which doesn't fit?",options:["Serotonin","Dopamine","Cortisol","Melatonin","Adrenaline","Insulin"],correct:5,exp:"Insulin is metabolic. All others are brain/mood related.",diff:6},
+  {q:"Which is the odd one out?",options:["Mozart","Bach","Beethoven","Handel","Brahms","Vivaldi"],correct:4,exp:"Brahms was Romantic. All others are Baroque or Classical.",diff:6},
+  {q:"Which one is different?",options:["Neutron","Proton","Electron","Quark","Gluon","Boson"],correct:null,exp:"They all belong — all six are subatomic particles.",diff:6},
+  // EXPERT (diff 7-8) ───────────────────────────────
+  {q:"Which doesn't belong?",options:["DNA","RNA","mRNA","ATP","tRNA","rRNA"],correct:3,exp:"ATP is an energy molecule. All others are nucleic acids.",diff:7},
+  {q:"Spot the odd one out",options:["Hegel","Kant","Spinoza","Locke","Descartes","Wittgenstein"],correct:5,exp:"Wittgenstein was analytic. All others are rationalists or idealists.",diff:7},
+  {q:"Which is the odd one out?",options:["JPEG","WebP","HEIF","AVIF","H.264","PNG"],correct:4,exp:"H.264 is a video codec. All others are image formats.",diff:7},
+  {q:"Which doesn't fit?",options:["TCP","UDP","HTTP","FTP","IP","ARP"],correct:2,exp:"HTTP is application-layer. All others are transport or network.",diff:7},
+  {q:"Which doesn't fit?",options:["Schrodinger","Heisenberg","Bohr","Pauli","Dirac","Feynman"],correct:5,exp:"Feynman's work came post-WWII. All others built early quantum mechanics.",diff:8},
+  {q:"Which doesn't belong?",options:["Riemann","Euler","Gauss","Cantor","Godel","Poincaré"],correct:4,exp:"Godel is known for logic. All others for geometry/analysis.",diff:8},
+  {q:"Spot the odd one out",options:["Kafka","Redis","RabbitMQ","Kinesis","Pulsar","NATS"],correct:null,exp:"They all belong — all six are distributed messaging platforms.",diff:8},
+  // EMOJI QUESTIONS ─────────────────────────────────
+  {type:'emoji',q:"Which animal is NOT a big cat?",options:[{e:"🦁",label:"Lion"},{e:"🐯",label:"Tiger"},{e:"🐆",label:"Leopard"},{e:"🐆",label:"Cheetah"},{e:"🐺",label:"Wolf"},{e:"🐆",label:"Jaguar"}],correct:4,exp:"Wolf is a canine. Lions, tigers, leopards, cheetahs and jaguars are felids.",diff:2},
+  {type:'emoji',q:"Which is NOT a mode of transport?",options:[{e:"🚲",label:"Bicycle"},{e:"🛶",label:"Kayak"},{e:"🎈",label:"Balloon"},{e:"🏭",label:"Windmill"},{e:"🚢",label:"Ship"},{e:"🚁",label:"Helicopter"}],correct:3,exp:"Windmill generates power — it doesn't transport people.",diff:2},
+  {type:'emoji',q:"Which is NOT a dessert?",options:[{e:"🍦",label:"Ice Cream"},{e:"🍩",label:"Doughnut"},{e:"🥐",label:"Croissant"},{e:"🎂",label:"Cake"},{e:"🍮",label:"Pudding"},{e:"🍪",label:"Cookie"}],correct:2,exp:"Croissant is a breakfast pastry, not a dessert.",diff:2},
+  {type:'emoji',q:"Which is NOT a planet in our solar system?",options:[{e:"🪐",label:"Saturn"},{e:"🔵",label:"Neptune"},{e:"🌙",label:"Moon"},{e:"🟠",label:"Mars"},{e:"🟡",label:"Venus"},{e:"🔵",label:"Uranus"}],correct:2,exp:"Moon is Earth's natural satellite, not a planet.",diff:2},
+  {type:'emoji',q:"Which animal is NOT a bird?",options:[{e:"🦩",label:"Flamingo"},{e:"🦜",label:"Parrot"},{e:"🦋",label:"Butterfly"},{e:"🦚",label:"Peacock"},{e:"🐧",label:"Penguin"},{e:"🦅",label:"Eagle"}],correct:2,exp:"Butterfly is an insect. All others are birds.",diff:1},
+  {type:'emoji',q:"Which is NOT a European country?",options:[{e:"🇫🇷",label:"France"},{e:"🇩🇪",label:"Germany"},{e:"🇯🇵",label:"Japan"},{e:"🇮🇹",label:"Italy"},{e:"🇪🇸",label:"Spain"},{e:"🇵🇱",label:"Poland"}],correct:2,exp:"Japan is in East Asia. All others are European countries.",diff:1},
+  {type:'emoji',q:"Which is NOT a fruit?",options:[{e:"🍇",label:"Grape"},{e:"🥕",label:"Carrot"},{e:"🍓",label:"Strawberry"},{e:"🍒",label:"Cherry"},{e:"🥭",label:"Mango"},{e:"🍑",label:"Peach"}],correct:1,exp:"Carrot is a root vegetable. All others are fruits.",diff:1},
+  {type:'emoji',q:"Which is NOT a mammal?",options:[{e:"🐬",label:"Dolphin"},{e:"🐸",label:"Frog"},{e:"🐘",label:"Elephant"},{e:"🦁",label:"Lion"},{e:"🐋",label:"Whale"},{e:"🦇",label:"Bat"}],correct:1,exp:"Frog is an amphibian. All others are mammals.",diff:2},
+  {type:'emoji',q:"Which is NOT a sport with a ball?",options:[{e:"⚽",label:"Football"},{e:"🏀",label:"Basketball"},{e:"🤸",label:"Gymnastics"},{e:"🎾",label:"Tennis"},{e:"🏈",label:"Rugby"},{e:"🎱",label:"Pool"}],correct:2,exp:"Gymnastics requires no ball. All others are ball sports.",diff:1},
+  {type:'emoji',q:"Which is NOT a musical instrument?",options:[{e:"🎸",label:"Guitar"},{e:"🎻",label:"Violin"},{e:"🎺",label:"Trumpet"},{e:"⌨️",label:"Keyboard"},{e:"🥁",label:"Drums"},{e:"🎷",label:"Saxophone"}],correct:3,exp:"Keyboard here is a computer keyboard. All others are instruments.",diff:2},
+  {type:'emoji',q:"Which is NOT a weather phenomenon?",options:[{e:"🌩️",label:"Thunder"},{e:"🌪️",label:"Tornado"},{e:"🌈",label:"Rainbow"},{e:"🌊",label:"Tsunami"},{e:"🌨️",label:"Snowstorm"},{e:"🔥",label:"Wildfire"}],correct:null,exp:"They all belong — thunder, tornado, rainbow, tsunami, snowstorm and wildfire are all natural phenomena.",diff:4},
+  {type:'emoji',q:"Which country is NOT in Africa?",options:[{e:"🇳🇬",label:"Nigeria"},{e:"🇰🇪",label:"Kenya"},{e:"🇿🇦",label:"S. Africa"},{e:"🇸🇦",label:"Saudi Arabia"},{e:"🇪🇬",label:"Egypt"},{e:"🇬🇭",label:"Ghana"}],correct:3,exp:"Saudi Arabia is in the Middle East. All others are African countries.",diff:2},
+  {type:'emoji',q:"Which is NOT a programming language?",options:[{e:"🐍",label:"Python"},{e:"☕",label:"Java"},{e:"💎",label:"Ruby"},{e:"🦀",label:"Rust"},{e:"🌐",label:"HTML"},{e:"📜",label:"C++"}],correct:4,exp:"HTML is a markup language, not a programming language.",diff:4},
+];
+
+const DOUBLE_Q = [
+  {q:"One of these is NOT a real moon of Saturn. Which?",options:["Titan","Enceladus","Hyperion","Callisto","Mimas","Dione"],correct:3,exp:"Callisto orbits Jupiter, not Saturn.",diff:10},
+  {q:"Which is NOT a tempo marking in classical music?",options:["Allegro","Adagio","Presto","Forte","Andante","Vivace"],correct:3,exp:"Forte is a volume marking, not a tempo.",diff:10},
+  {q:"Which philosopher did NOT write a major 'Critique'?",options:["Kant","Hegel","Lyotard","Spinoza","Deleuze","Marx"],correct:3,exp:"Spinoza wrote the 'Ethics' and 'Tractatus'.",diff:10},
+];
+
+const NEAR_MISS = [
+  "So close… most players fail right here.",
+  "You almost had it. 90% stop at this level.",
+  "One step away. Only top 10% clear this.",
+  "That's where champions fall. Try again.",
+  "Most players give up here. Will you?",
+];
+
+const DIFF_LBL = {1:'Easy',2:'Easy',3:'Medium',4:'Medium',5:'Hard',6:'Hard',7:'Expert',8:'Expert'};
+const DIFF_CLS = {1:'easy',2:'easy',3:'medium',4:'medium',5:'hard',6:'hard',7:'expert',8:'expert'};
+
+const COUNTRIES = [
+  {flag:"🇭🇷",name:"Croatia"},{flag:"🇩🇪",name:"Germany"},{flag:"🇺🇸",name:"USA"},
+  {flag:"🇬🇧",name:"UK"},{flag:"🇫🇷",name:"France"},{flag:"🇮🇹",name:"Italy"},
+  {flag:"🇯🇵",name:"Japan"},{flag:"🇧🇷",name:"Brazil"},{flag:"🇦🇺",name:"Australia"},
+  {flag:"🇨🇦",name:"Canada"},{flag:"🇳🇱",name:"Netherlands"},{flag:"🇪🇸",name:"Spain"},
+  {flag:"🇵🇱",name:"Poland"},{flag:"🇸🇪",name:"Sweden"},{flag:"🇷🇺",name:"Russia"},
+  {flag:"🇰🇷",name:"South Korea"},{flag:"🇨🇳",name:"China"},{flag:"🇮🇳",name:"India"},
+  {flag:"🇲🇽",name:"Mexico"},{flag:"🇦🇷",name:"Argentina"},{flag:"🌍",name:"Other"},
+];
+
+const AVATARS = ["😎","🧠","🦊","🐺","🦁","🐯","🦅","🐉","👾","🤖","🎩","🔥","⚡","💎","🏆"];
+
+const ACHIEVEMENTS = {
+  perfect:   {icon:"🎯",name:"Perfect",desc:"10/10 no mistakes"},
+  streak5:   {icon:"🔥",name:"On Fire",desc:"5-day streak"},
+  streak10:  {icon:"🌋",name:"Unstoppable",desc:"10-day streak"},
+  champion:  {icon:"🏆",name:"Champion",desc:"Won a tournament"},
+  trickster: {icon:"🎩",name:"Trick Master",desc:"Spotted 10 tricks"},
+  genius:    {icon:"🧠",name:"Genius",desc:"Expert answer <3s"},
+  veteran:   {icon:"💎",name:"Veteran",desc:"30 days played"},
+  highroller:{icon:"💰",name:"High Roller",desc:"10 tournaments"},
+};
+
+// Fake leaderboard data
+const FAKE_LB = [
+  {name:"NightOwl99",flag:"🇩🇪",e:"🦊",score:940,achs:["champion","genius"]},
+  {name:"QuizKing",flag:"🇺🇸",e:"👑",score:920,achs:["champion","perfect","streak10"]},
+  {name:"BrainBlast",flag:"🇭🇷",e:"🧠",score:880,achs:["genius","streak5"]},
+  {name:"TrickMaster",flag:"🇯🇵",e:"🎩",score:860,achs:["trickster","perfect"]},
+  {name:"SpeedDemon",flag:"🇬🇧",e:"⚡",score:820,achs:["genius"]},
+  {name:"CuriousCat",flag:"🇫🇷",e:"🐯",score:790,achs:["streak5"]},
+  {name:"DeepThought",flag:"🇧🇷",e:"🤖",score:740,achs:[]},
+  {name:"Mastermind",flag:"🇰🇷",e:"💎",score:710,achs:["veteran"]},
+];
+
+// ═══════════════════════════════════════════════════
+// PLAYER STATE (localStorage backed)
+// ═══════════════════════════════════════════════════
+function loadPlayer(){
+  try{return JSON.parse(localStorage.getItem('ooPlayer'))||newPlayer();}catch(e){return newPlayer();}
+}
+function savePlayer(){
+  try{localStorage.setItem('ooPlayer',JSON.stringify(P));}catch(e){}
+}
+function newPlayer(){
+  const animals=["QuickFox","BrainWolf","NightOwl","SpeedHawk","TrickBear"];
+  const name=animals[Math.floor(Math.random()*animals.length)]+'_'+(100+Math.floor(Math.random()*900));
+  return {name,flag:"🌍",country:"Other",avatar:"😎",tokens:50,
+    registered:false,email:'',
+    gamesPlayed:0,bestScore:0,streak:0,lastPlayDate:'',
+    achievements:[],usedQIds:[],totalCorrect:0,trickSpotted:0,tournEntered:0};
+}
+
+let P = loadPlayer();
+
+// Check daily login bonus
+function checkDailyLogin(){
+  const today=new Date().toDateString();
+  if(P.lastPlayDate!==today){
+    if(P.lastPlayDate){
+      const yesterday=new Date(Date.now()-86400000).toDateString();
+      if(P.lastPlayDate===yesterday) P.streak++;
+      else P.streak=1;
+    } else {P.streak=1;}
+    P.lastPlayDate=today;
+    P.tokens+=10;
+    savePlayer();
+    setTimeout(()=>showToast('📅 Daily login: +10 🪙 tokens!'),1000);
+    if(P.streak===7){P.tokens+=50;savePlayer();setTimeout(()=>showToast('🔥 7-day streak: +50 🪙 bonus!'),2500);}
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════════
+let S = {
+  mode:'free',qs:[],cur:0,score:0,correct:0,wrong:0,
+  answered:false,timer:null,timeLeft:10,
+  streak:0,combo:0,results:[],isDouble:false,
+  qStartTime:0,currentComp:null,tokensOnEntry:0,
+};
+
+// ═══════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  // top bar visibility
+  const noBar=['auth','game','double'];
+  const tb=document.getElementById('topBar');
+  tb.className='top-bar'+(noBar.includes(id)?'':' show');
+  updateWallet();
+  // build dynamic screens
+  if(id==='lobby') setTimeout(()=>buildLobby(),0);
+  if(id==='leaderboard') setTimeout(()=>buildLeaderboard('global'),0);
+  if(id==='profile') setTimeout(()=>buildProfile(),0);
+}
+
+function quitGame(){
+  // During double-or-nothing, no quitting
+  if(S.isDouble) return;
+  const msg = S.mode==='prize'
+    ? 'Quit Challenge Mode? Your progress will be lost.'
+    : S.mode==='tournament'
+    ? 'Quit tournament? Your entry tokens are not refunded.'
+    : 'Quit game? Your progress will be lost.';
+  if(confirm(msg)){
+    clearTmr();
+    const dest = S.mode==='tournament' ? 'lobby' : 'start';
+    showScreen(dest);
+  }
+}
+
+function updateWallet(){
+  document.getElementById('walletAmt').textContent=P.tokens;
+  document.getElementById('profTokenBal').textContent=P.tokens;
+  document.getElementById('profAvatarSmall').textContent=P.avatar||'😎';
+  document.getElementById('profNameSmall').textContent=P.name||'Guest';
+}
+
+function showToast(msg,dur=2000){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+function showStreak(n){
+  const el=document.getElementById('streakBadge');
+  el.textContent=`🔥 ${n} streak!`;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),1600);
+}
+
+function shuffle(a){
+  const b=[...a];
+  for(let i=b.length-1;i>0;i--){const j=0|Math.random()*(i+1);[b[i],b[j]]=[b[j],b[i]];}
+  return b;
+}
+
+// ═══════════════════════════════════════════════════
+// START SCREEN
+// ═══════════════════════════════════════════════════
+function buildStartBg(){
+  const bg=document.getElementById('startBg');
+  for(let i=0;i<60;i++){const d=document.createElement('div');d.className='start-bg-cell';bg.appendChild(d);}
+}
+
+function animateLive(){
+  const el=document.getElementById('liveCount');
+  let n=2400+0|Math.random()*900;
+  el.textContent=n.toLocaleString()+' playing now';
+  setInterval(()=>{n+=0|Math.random()*9-4;n=Math.max(2100,Math.min(3500,n));el.textContent=n.toLocaleString()+' playing now';},3200);
+}
+
+// ═══════════════════════════════════════════════════
+// GAME START
+// ═══════════════════════════════════════════════════
+function startGame(mode){
+  // If entering paid mode and not registered, prompt auth
+  if(mode==='prize'&&!P.registered){
+    // Allow play but note no leaderboard
+  }
+  S.mode=mode;S.score=0;S.correct=0;S.wrong=0;
+  S.streak=0;S.combo=0;S.results=[];S.isDouble=false;S.currentComp=null;
+
+  if(mode==='free'){
+    // Escalating difficulty: 3 easy, 4 medium, 3 hard, 2 expert
+    const tiers=[
+      {min:1,max:2,count:3},{min:3,max:4,count:4},
+      {min:5,max:6,count:3},{min:7,max:8,count:2}
+    ];
+    const used=new Set(P.usedQIds);
+    let picked=[];
+    tiers.forEach(({min,max,count})=>{
+      let pool=Q.map((q,i)=>({...q,_id:i}))
+        .filter(q=>q.diff>=min&&q.diff<=max&&!used.has(q._id));
+      if(pool.length<count){
+        // reset used for this tier if exhausted
+        pool=Q.map((q,i)=>({...q,_id:i})).filter(q=>q.diff>=min&&q.diff<=max);
+      }
+      const s=shuffle(pool).slice(0,count);
+      s.forEach(q=>used.add(q._id));
+      picked=[...picked,...s];
+    });
+    // Update used IDs
+    P.usedQIds=[...used];
+    if(P.usedQIds.length>Q.length*0.8) P.usedQIds=[];
+    savePlayer();
+    S.qs=picked;
+  } else if(mode==='prize'){
+    buildPrize();
+  }
+  S.cur=0;showScreen('game');renderQ();
+}
+
+function buildPrize(){
+  const levels=[3,4,5,6,7,7,8,9,9,10];
+  const used=[];
+  S.qs=levels.map((diff,lvl)=>{
+    const isTrick=lvl>=6&&Math.random()<.45;
+    let pool;
+    if(isTrick){
+      pool=Q.map((q,i)=>({...q,_id:i})).filter(q=>q.correct===null&&!used.includes(q._id));
+      if(!pool.length) pool=Q.map((q,i)=>({...q,_id:i})).filter(q=>q.diff>=diff-1&&!used.includes(q._id));
+    }else{
+      pool=Q.map((q,i)=>({...q,_id:i})).filter(q=>q.diff>=diff-1&&q.diff<=diff+1&&q.correct!==null&&!used.includes(q._id));
+      if(!pool.length) pool=Q.map((q,i)=>({...q,_id:i})).filter(q=>!used.includes(q._id));
+    }
+    const p=pool[0|Math.random()*pool.length];
+    if(p)used.push(p._id);
+    return p||Q[lvl];
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// COMPETITION ENTRY
+// ═══════════════════════════════════════════════════
+function enterTournament(){
+  const comp=S.currentComp;
+  if(!comp)return;
+  if(!P.registered){showScreen('auth');return;}
+  if(P.tokens<comp.entryCost){
+    document.getElementById('tokenWarning').style.display='block';
+    return;
+  }
+  P.tokens-=comp.entryCost;
+  P.tournEntered++;
+  S.tokensOnEntry=comp.entryCost;
+  savePlayer();
+  updateWallet();
+  // Build fixed question set for this comp
+  const used=[];
+  S.mode='tournament';S.score=0;S.correct=0;S.wrong=0;
+  S.streak=0;S.combo=0;S.results=[];S.isDouble=false;
+  S.qs=buildCompQuestions();
+  S.cur=0;showScreen('game');renderQ();
+}
+
+function buildCompQuestions(){
+  // 10 questions, escalating difficulty
+  const levels=[2,3,4,5,6,7,7,8,8,9];
+  const used=[];
+  return levels.map((diff)=>{
+    let pool=Q.map((q,i)=>({...q,_id:i})).filter(q=>q.diff>=diff-1&&q.diff<=diff+1&&!used.includes(q._id));
+    if(!pool.length) pool=Q.map((q,i)=>({...q,_id:i})).filter(q=>!used.includes(q._id));
+    const p=pool[0|Math.random()*pool.length];
+    if(p)used.push(p._id);
+    return p||Q[0];
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER QUESTION
+// ═══════════════════════════════════════════════════
+function renderQ(){
+  clearTmr();S.answered=false;S.qStartTime=Date.now();
+  const q=S.qs[S.cur];
+  const total=S.qs.length;
+  const isEmoji=q.type==='emoji';
+
+  // mode label
+  const modeNames={free:'Free Play',prize:'Challenge Mode',tournament:S.currentComp?S.currentComp.name:'Tournament'};
+  document.getElementById('modeLbl').textContent=S.isDouble?'Double or Nothing':(modeNames[S.mode]||'Free Play');
+
+  // difficulty tag (free only)
+  const dt=document.getElementById('diffTag');
+  if(S.mode==='free'&&!S.isDouble){
+    dt.textContent=DIFF_LBL[q.diff]||'';dt.className='diff-tag '+(DIFF_CLS[q.diff]||'');dt.style.display='';
+  }else{dt.style.display='none';}
+
+  // badge
+  const lb=document.getElementById('levelBadge');
+  if(S.isDouble){lb.textContent='FINAL';lb.className='game-level-badge prize';}
+  else if(S.mode==='prize'){lb.textContent=`Level ${S.cur+1}/10`;lb.className='game-level-badge prize';}
+  else if(S.mode==='tournament'){lb.textContent=`Q ${S.cur+1}/10`;lb.className='game-level-badge monthly';}
+  else{lb.textContent=`Q ${S.cur+1}/${total}`;lb.className='game-level-badge';}
+
+  // progress
+  const pb=document.getElementById('progBar');
+  pb.style.width=(S.cur/total*100)+'%';
+  pb.className='prog-bar'+(S.mode==='prize'?' prize-c':S.mode==='tournament'?' monthly-c':' free-c');
+
+  renderComboPips();
+  document.getElementById('qNum').textContent=S.isDouble?'Final Question':`Question ${S.cur+1}`;
+  document.getElementById('qText').textContent=q.q;
+
+  // options
+  const grid=document.getElementById('optGrid');grid.innerHTML='';
+  if(isEmoji){
+    grid.className='emj-grid';
+    (S.isDouble?q.options.slice(0,3):q.options).forEach((opt,i)=>{
+      const c=document.createElement('button');c.className='emj-card';
+      c.innerHTML=`<div class="ec-tn"></div><div class="ec-e">${opt.e}</div><div class="ec-l">${opt.label}</div><div class="ec-ck"></div>`;
+      c.onclick=()=>pick(i);grid.appendChild(c);
+    });
+  }else{
+    grid.className=`opt-grid ${S.isDouble?'g3':'g6'}`;
+    (S.isDouble?q.options.slice(0,3):q.options).forEach((opt,i)=>{
+      const b=document.createElement('button');b.className='opt-btn';
+      b.textContent=opt;b.onclick=()=>pick(i);grid.appendChild(b);
+    });
+  }
+
+  const tab=document.getElementById('tabBtn');
+  tab.className='tab-btn';tab.style.display=S.isDouble?'none':'flex';
+  document.getElementById('fbCard').className='fb-card';
+
+  buildDots();startTmr();
+  const qc=document.getElementById('qCard');
+  qc.classList.remove('slide-in','glow','flash','c-bounce');
+  grid.classList.remove('slide-in');
+  void qc.offsetWidth;
+  qc.classList.add('slide-in');grid.classList.add('slide-in');
+}
+
+function renderComboPips(){
+  const pips=document.getElementById('comboPips');
+  const mult=document.getElementById('comboMult');
+  const lbl=document.getElementById('comboLbl');
+  if(S.mode!=='free'){pips.innerHTML='';mult.className='combo-mult';lbl.className='combo-lbl';return;}
+  pips.innerHTML='';
+  for(let i=0;i<3;i++){const d=document.createElement('div');d.className='combo-pip'+(i<S.combo?' lit':'');pips.appendChild(d);}
+  if(S.combo>=3){
+    const m=Math.min(4,1+Math.floor(S.combo/3));
+    mult.textContent=`×${m}`;mult.className='combo-mult show';
+    lbl.textContent=S.combo>=6?'🔥 Unstoppable!':'🔥 On a roll!';lbl.className='combo-lbl show';
+  }else{mult.className='combo-mult';lbl.className='combo-lbl';}
+}
+
+function buildDots(){
+  if(S.isDouble){document.getElementById('dots').innerHTML='';return;}
+  const c=document.getElementById('dots');c.innerHTML='';
+  S.qs.forEach((_,i)=>{
+    const d=document.createElement('div');d.className='dot';
+    if(i<S.cur)d.classList.add(S.results[i]?'ok':'no');
+    else if(i===S.cur)d.classList.add('cur');
+    c.appendChild(d);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════
+function startTmr(){
+  S.timeLeft=10;
+  const bar=document.getElementById('timerBar'),txt=document.getElementById('timerTxt');
+  bar.style.width='100%';bar.className='timer-bar';txt.className='timer-txt';txt.textContent='10';
+  S.timer=setInterval(()=>{
+    S.timeLeft-=.1;
+    bar.style.width=Math.max(0,S.timeLeft/10*100)+'%';
+    txt.textContent=Math.ceil(S.timeLeft);
+    if(S.timeLeft<=3){bar.className='timer-bar urgent';txt.className='timer-txt urgent';}
+    if(S.timeLeft<=0){clearTmr();if(!S.answered)pick('timeout');}
+  },100);
+}
+function clearTmr(){if(S.timer){clearInterval(S.timer);S.timer=null;}}
+
+// ═══════════════════════════════════════════════════
+// PICK
+// ═══════════════════════════════════════════════════
+function pick(idx){
+  if(S.answered)return;
+  S.answered=true;clearTmr();
+  const elapsed=Date.now()-S.qStartTime;
+  const q=S.qs[S.cur];const rc=q.correct;const isEmoji=q.type==='emoji';
+  let ok;
+  if(idx==='timeout'){ok=false;showToast('⏰ Time\'s up!');}
+  else if(idx===-1){ok=(rc===null);}
+  else{ok=(idx===rc);}
+
+  // tap pop
+  if(idx!=='timeout'&&idx!==-1&&!isEmoji){
+    const btns=document.querySelectorAll('.opt-btn');
+    if(btns[idx]){btns[idx].classList.add('pop');setTimeout(()=>btns[idx].classList.remove('pop'),150);}
+  }
+
+  // apply states
+  const applyS=(el,i)=>{el.classList.add('disabled');if(i===rc)el.classList.add(idx==='timeout'?'reveal':'correct');else if(i===idx&&!ok)el.classList.add('wrong');};
+  const tab=document.getElementById('tabBtn');
+  if(isEmoji)document.querySelectorAll('.emj-card').forEach((c,i)=>applyS(c,i));
+  else document.querySelectorAll('.opt-btn').forEach((b,i)=>applyS(b,i));
+  if(rc===null)tab.classList.add(idx==='timeout'?'reveal':idx===-1?'correct':'wrong');
+  if(idx!==-1&&idx!=='timeout')tab.classList.add('disabled');
+
+  // sound
+  if(idx==='timeout')playTimeout();else if(ok)playCorrect();else playWrong();
+
+  // flash
+  if(idx!=='timeout'){
+    const sf=document.getElementById('sf');
+    sf.className='screen-flash '+(ok?'ok':'no');
+    setTimeout(()=>sf.className='screen-flash',200);
+  }
+
+  // card
+  const qc=document.getElementById('qCard');
+  if(ok&&idx!=='timeout'){qc.classList.add('glow','c-bounce');setTimeout(()=>qc.classList.remove('c-bounce'),300);}
+  else if(!ok&&idx!=='timeout'){qc.classList.add('shake','flash');setTimeout(()=>qc.classList.remove('shake','flash'),380);}
+
+  // speed floater
+  if(ok&&idx!=='timeout'&&elapsed<4000){
+    const lbl=elapsed<1500?'⚡ Lightning!':elapsed<2800?'🔥 Fast!':'👍 Quick!';
+    floater(lbl,'var(--correct)');
+  }
+
+  // feedback
+  const fb=document.getElementById('fbCard'),fbr=document.getElementById('fbRes'),fbt=document.getElementById('fbTxt');
+  if(idx==='timeout'){fbr.className='fb-res no';fbr.textContent='Time\'s up!';fb.classList.add('no');}
+  else{fbr.className=`fb-res ${ok?'ok':'no'}`;fbr.textContent=ok?'✓ Correct!':'✗ Wrong!';fb.classList.add(ok?'ok':'no');}
+  fbt.textContent=q.exp;
+  setTimeout(()=>fb.classList.add('show'),45);
+
+  // score + combo
+  if(ok){
+    S.correct++;S.streak++;S.combo++;
+    const mult=(S.mode==='free')?Math.min(4,1+Math.floor(S.combo/3)):1;
+    const base=10+(q.diff||1)*2;
+    const pts=S.isDouble?0:base*mult;
+    S.score+=pts;
+    if(pts>base&&S.mode==='free')floater(`+${pts} ×${mult}!`,'var(--accent)');
+    if(S.streak>=3){showStreak(S.streak);if(S.streak===3||S.streak%5===0)playStreak();}
+    // token earning for combo
+    if(S.combo===3&&S.mode==='free'){P.tokens+=5;savePlayer();updateWallet();floater('+5 🪙','var(--token)');}
+    // achievement: genius (expert q answered in <3s)
+    if(q.diff>=7&&elapsed<3000)unlockAchievement('genius');
+    // trick spotted
+    if(rc===null){P.trickSpotted++;if(P.trickSpotted>=10)unlockAchievement('trickster');savePlayer();}
+    renderComboPips();
+  }else{
+    S.wrong++;S.streak=0;S.combo=0;renderComboPips();
+  }
+  S.results.push(ok);
+  P.totalCorrect+=(ok?1:0);
+
+  // prize fail
+  if(S.mode==='prize'&&!S.isDouble&&!ok){setTimeout(()=>showResult('prize-fail'),1350);return;}
+  // double
+  if(S.isDouble){
+    if(ok)setTimeout(()=>{S.score*=2;showResult('double-win');},1350);
+    else setTimeout(()=>{S.score=0;showResult('double-lose');},1350);
+    return;
+  }
+  // advance
+  setTimeout(()=>{
+    document.getElementById('progBar').style.width=((S.cur+1)/S.qs.length*100)+'%';
+    S.cur++;
+    if(S.cur>=S.qs.length){
+      if(S.mode==='prize'){showScreen('double');document.getElementById('dblScore').textContent=S.score;}
+      else if(S.mode==='tournament')showTournResult();
+      else showResult('free-end');
+    }else renderQ();
+  },1250);
+}
+
+// ═══════════════════════════════════════════════════
+// FLOATER
+// ═══════════════════════════════════════════════════
+function floater(txt,color){
+  const el=document.createElement('div');el.className='mf';
+  el.textContent=txt;
+  el.style.cssText=`color:${color};left:50%;top:38%;transform:translateX(-50%)`;
+  document.getElementById('app').appendChild(el);
+  void el.offsetWidth;el.classList.add('go');
+  setTimeout(()=>el.remove(),750);
+}
+
+// ═══════════════════════════════════════════════════
+// DOUBLE
+// ═══════════════════════════════════════════════════
+function acceptDouble(){
+  S.isDouble=true;
+  S.qs=[DOUBLE_Q[0|Math.random()*DOUBLE_Q.length]];
+  S.cur=0;S.results=[];showScreen('game');renderQ();
+}
+function declineDouble(){showResult('double-decline');}
+
+// ═══════════════════════════════════════════════════
+// RESULT
+// ═══════════════════════════════════════════════════
+function showResult(type){
+  showScreen('result');
+  const em=document.getElementById('resEmoji'),ti=document.getElementById('resTitle'),
+    su=document.getElementById('resSub'),row=document.getElementById('scoreRow'),
+    pb=document.getElementById('resPrimary'),bb=document.getElementById('beatBar'),
+    nm=document.getElementById('nearMiss'),te=document.getElementById('tokensEarned');
+  row.innerHTML='';bb.style.display='none';nm.style.display='none';te.style.display='none';
+
+  // update player stats
+  P.gamesPlayed++;
+  if(S.score>P.bestScore)P.bestScore=S.score;
+  savePlayer();updateWallet();
+
+  // tokens earned this game
+  let tokensEarned=0;
+  if(type==='free-end'){
+    const pct=Math.round(S.correct/S.qs.length*100);
+    if(pct===100){em.textContent='🏆';ti.textContent='Perfect!';tokensEarned=15;unlockAchievement('perfect');}
+    else if(pct>=80){em.textContent='🔥';ti.textContent='On fire!';tokensEarned=8;}
+    else if(pct>=60){em.textContent='👏';ti.textContent='Not bad!';tokensEarned=4;}
+    else{em.textContent='🤔';ti.textContent='Keep trying.';tokensEarned=2;}
+    su.textContent=`${S.correct} out of ${S.qs.length} correct`;
+    const bp=Math.min(95,Math.max(38,0|52+(S.correct/S.qs.length)*42+(Math.random()*8)));
+    showBeatBar(bp);
+    if(tokensEarned>0){P.tokens+=tokensEarned;savePlayer();updateWallet();te.style.display='flex';document.getElementById('tokensEarnedTxt').textContent=`+${tokensEarned} tokens earned!`;}
+  }else if(type==='double-win'){
+    em.textContent='💰';ti.textContent='YOU DOUBLED IT!';su.textContent='Incredible. Score doubled.';
+  }else if(type==='double-lose'){
+    em.textContent='💸';ti.textContent='Wiped Out.';su.textContent='So close. You lost everything.';
+    nm.style.display='block';document.getElementById('nearMissT').textContent='Only 4% of players reach the double round.';
+  }else if(type==='prize-fail'){
+    em.textContent='💀';ti.textContent='Game Over.';
+    su.textContent=`Level ${S.cur+1}. One mistake ends it all.`;
+    if(S.cur>=5){nm.style.display='block';document.getElementById('nearMissT').textContent=NEAR_MISS[0|Math.random()*NEAR_MISS.length];}
+  }else if(type==='tourn-end'){
+    const beatPctMap=[28,40,52,62,71,80,89,96,98,99,100];
+    const bp=beatPctMap[Math.min(S.correct,10)];
+    em.textContent='🏆';ti.textContent=S.correct>=8?'Excellent!':S.correct>=5?'Good run!':'Not bad.';
+    su.textContent=`${S.correct}/10 correct`;
+    showBeatBar(bp);
+  }else if(type==='double-decline'){
+    em.textContent='🎯';ti.textContent='Smart move.';su.textContent='You took your score.';
+  }
+
+  addTile(row,S.score,'Score');
+  if(type!=='double-win'&&type!=='double-lose'){addTile(row,S.correct,'Correct');addTile(row,S.wrong,'Wrong');}
+  if(type==='prize-fail'){pb.onclick=()=>startGame('prize');pb.querySelector('span').textContent='Try Again';}
+  else if(type==='tourn-end'){pb.onclick=()=>showScreen('lobby');pb.querySelector('span').textContent='Back to Lobby';}
+  else{pb.onclick=()=>startGame(S.mode==='prize'?'prize':'free');pb.querySelector('span').textContent='Play Again';}
+}
+
+function showBeatBar(pct){
+  document.getElementById('beatBar').style.display='block';
+  document.getElementById('beatNum').innerHTML=`${pct}% <span>of players</span>`;
+  setTimeout(()=>document.getElementById('beatFill').style.width=pct+'%',120);
+}
+
+function addTile(row,val,lbl){
+  const t=document.createElement('div');t.className='score-tile';
+  t.innerHTML=`<div class="score-tile-n">${val}</div><div class="score-tile-l">${lbl}</div>`;
+  row.appendChild(t);
+}
+
+// ═══════════════════════════════════════════════════
+// TOURNAMENT RESULT
+// ═══════════════════════════════════════════════════
+function showTournResult(){showResult('tourn-end');}
+
+// ═══════════════════════════════════════════════════
+// LOBBY
+// ═══════════════════════════════════════════════════
+function buildLobby(){
+  const body=document.getElementById('lobbyBody');
+  body.innerHTML='';
+  COMPETITIONS.forEach(comp=>{
+    const card=document.createElement('div');
+    card.className=`comp-card ${comp.type}-card`;
+    const typeLabel={monthly:'🏆 Monthly',challenge:'⚡ Challenge',daily:'📅 Daily'}[comp.type]||comp.type;
+    const timeLeft=comp.endDate?getTimeLeft(comp.endDate):'Resets tonight';
+    card.innerHTML=`
+      <div class="comp-type-badge ${comp.type}">${typeLabel}</div>
+      <div class="comp-name">${comp.name}</div>
+      <div class="comp-prize-row">
+        <div class="comp-prize-icon">${comp.prize.icon}</div>
+        <div><div class="comp-prize-txt">${comp.prize.name}</div><div class="comp-prize-val">${comp.prize.value}</div></div>
+      </div>
+      <div class="comp-meta">
+        <div class="comp-timer">⏳ <span class="comp-timer-val">${timeLeft}</span></div>
+        <div class="comp-players">👥 ${comp.players.toLocaleString()} players</div>
+      </div>
+      <div class="comp-enter-btn ${comp.type}" onclick="openComp('${comp.id}')">
+        Enter — ${comp.entryCost} 🪙
+      </div>
+    `;
+    body.appendChild(card);
+  });
+}
+
+function openComp(id){
+  const comp=COMPETITIONS.find(c=>c.id===id);
+  if(!comp)return;
+  S.currentComp=comp;
+
+  // populate tourn lobby
+  document.getElementById('tlType').textContent={monthly:'🏆 Monthly Championship',challenge:'⚡ Challenge',daily:'📅 Daily Tournament'}[comp.type]||comp.type;
+  document.getElementById('tlType').className=`tl-type ${comp.type}`;
+  document.getElementById('tlName').textContent=comp.name;
+  document.getElementById('tlPlayers').textContent=comp.players.toLocaleString();
+  document.getElementById('tlCost').textContent=`${comp.entryCost} 🪙`;
+  document.getElementById('tlCountdown').textContent=comp.endDate?getTimeLeft(comp.endDate):'Resets tonight';
+  document.getElementById('tokenWarning').style.display='none';
+
+  // prize box
+  const pb=document.getElementById('tlPrizeBox');
+  pb.innerHTML=`
+    <div class="prize-box ${comp.prize.type==='physical'?'physical':'tokens-prize'}">
+      <div class="prize-icon">${comp.prize.icon}</div>
+      <div class="prize-info">
+        <div class="prize-label">🥇 First Prize</div>
+        <div class="prize-name">${comp.prize.name}</div>
+        <div class="prize-value">${comp.prize.value}</div>
+      </div>
+    </div>
+    <div class="podium-row">
+      ${comp.podium.map(p=>`
+        <div class="podium-tile ${p.rank==='🥇'?'gold':p.rank==='🥈'?'silver':'bronze'}">
+          <div class="podium-rank">${p.rank}</div>
+          <div class="podium-prize">${p.prize}</div>
+          <div class="podium-sub">${p.sub}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // mini leaderboard preview
+  buildLbPreview();
+
+  // enter button
+  const enterBtn=document.getElementById('tlEnterBtn');
+  if(P.tokens<comp.entryCost){
+    enterBtn.innerHTML=`<span>Not enough tokens</span><span class="btn-arrow">🪙</span>`;
+    enterBtn.className='btn-danger';enterBtn.onclick=()=>showScreen('shop');
+  }else{
+    enterBtn.innerHTML=`<span>Enter — ${comp.entryCost} 🪙</span><span class="btn-arrow">→</span>`;
+    enterBtn.className='btn-primary';enterBtn.onclick=enterTournament;
+  }
+
+  showScreen('tourn-lobby');
+}
+
+function buildLbPreview(){
+  const preview=document.getElementById('tlLbPreview');
+  const youEntry={name:P.name||'You',flag:P.flag||'🌍',e:P.avatar||'😎',score:P.bestScore||0,achs:P.achievements||[],isYou:true};
+  const rows=[...FAKE_LB.slice(0,3),youEntry];
+  preview.innerHTML=`
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Current leaderboard</div>
+    ${rows.map((p,i)=>lbRowHTML(p,i+(p.isYou&&i>=3?youRank():i+1),p.isYou)).join('')}
+  `;
+}
+
+function youRank(){
+  const yourScore=P.bestScore||0;
+  const rank=FAKE_LB.filter(p=>p.score>yourScore).length+1;
+  return rank;
+}
+
+// ═══════════════════════════════════════════════════
+// LEADERBOARD
+// ═══════════════════════════════════════════════════
+function buildLeaderboard(tab='global'){
+  const body=document.getElementById('lbBody');body.innerHTML='';
+  const comp=S.currentComp||COMPETITIONS[0];
+  document.getElementById('lbTitleSub').textContent=comp.name;
+
+  const youEntry={name:P.name||'You',flag:P.flag||'🌍',e:P.avatar||'😎',score:P.bestScore||0,achs:P.achievements||[],isYou:true};
+  let leaders=[...FAKE_LB];
+
+  if(tab==='country'){
+    leaders=leaders.filter(p=>p.flag===P.flag||Math.random()>.5).slice(0,5);
+  }else if(tab==='friends'){
+    leaders=leaders.slice(0,3); // simulated friends
+    leaders.unshift({name:"FriendAlex",flag:"🇩🇪",e:"🦊",score:780,achs:["streak5"]});
+  }
+
+  const insertIdx=leaders.findIndex(p=>p.score<(P.bestScore||0));
+  if(insertIdx===-1)leaders.push(youEntry);else leaders.splice(insertIdx,0,youEntry);
+
+  leaders.slice(0,10).forEach((p,i)=>{
+    const div=document.createElement('div');
+    div.className='lb-row'+(p.isYou?' you':'');
+    div.innerHTML=lbRowHTML(p,i+1,p.isYou);
+    body.appendChild(div);
+    div.style.opacity='0';div.style.transform='translateX(-8px)';
+    setTimeout(()=>{div.style.transition='opacity .22s,transform .22s';div.style.opacity='1';div.style.transform='translateX(0)';},i*65);
+  });
+}
+
+function lbRowHTML(p,rank,isYou){
+  const rankDisp=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+  const achIcons=(p.achs||[]).slice(0,3).map(a=>ACHIEVEMENTS[a]?ACHIEVEMENTS[a].icon:'').join('');
+  return `
+    <div class="lb-rank">${rankDisp}</div>
+    <div class="lb-flag">${p.flag||'🌍'}</div>
+    <div class="lb-info">
+      <div class="lb-name${isYou?' you':''}">${p.name}</div>
+      <div class="lb-achievements">${achIcons.split('').map(ic=>`<span class="lb-ach">${ic}</span>`).join('')}</div>
+    </div>
+    <div class="lb-right"><div class="lb-score">${p.score}</div></div>
+  `;
+}
+
+function switchLbTab(tab,el){
+  document.querySelectorAll('.lb-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  buildLeaderboard(tab);
+}
+
+// ═══════════════════════════════════════════════════
+// PROFILE
+// ═══════════════════════════════════════════════════
+function buildProfile(){
+  document.getElementById('profAvatarBig').textContent=P.avatar||'😎';
+  document.getElementById('profUsernameTxt').textContent=P.name||'Guest';
+  document.getElementById('profFlagCountry').textContent=`${P.flag||'🌍'} ${P.country||'World'}`;
+  document.getElementById('pStatGames').textContent=P.gamesPlayed||0;
+  document.getElementById('pStatStreak').textContent=P.streak||0;
+  document.getElementById('pStatBest').textContent=P.bestScore||0;
+
+  // achievements
+  const row=document.getElementById('profAchRow');row.innerHTML='';
+  (P.achievements||[]).forEach(id=>{
+    const a=ACHIEVEMENTS[id];if(!a)return;
+    const b=document.createElement('div');b.className='ach-badge';
+    b.innerHTML=`<span class="ach-icon">${a.icon}</span><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div>`;
+    row.appendChild(b);
+  });
+  if(!P.achievements||P.achievements.length===0){
+    row.innerHTML='<div style="font-size:13px;color:var(--muted)">No achievements yet — keep playing!</div>';
+  }
+
+  // edit fields
+  document.getElementById('editUsername').value=P.name||'';
+  // country select
+  const sel=document.getElementById('editCountry');sel.innerHTML='';
+  COUNTRIES.forEach(c=>{
+    const o=document.createElement('option');o.value=c.name;o.textContent=`${c.flag} ${c.name}`;
+    if(c.name===P.country)o.selected=true;
+    sel.appendChild(o);
+  });
+  // avatar picker
+  const ap=document.getElementById('avatarPicker');ap.innerHTML='';
+  AVATARS.forEach(av=>{
+    const b=document.createElement('button');
+    b.style.cssText=`font-size:26px;background:${av===P.avatar?'var(--surface2)':'transparent'};border:2px solid ${av===P.avatar?'var(--accent)':'var(--border)'};border-radius:12px;padding:8px;cursor:pointer;transition:all .1s`;
+    b.textContent=av;
+    b.onclick=()=>{P.avatar=av;savePlayer();buildProfile();};
+    ap.appendChild(b);
+  });
+}
+
+function saveProfile(){
+  const newName=document.getElementById('editUsername').value.trim();
+  if(newName)P.name=newName;
+  const sel=document.getElementById('editCountry');
+  P.country=sel.value;
+  const c=COUNTRIES.find(c=>c.name===sel.value);
+  if(c)P.flag=c.flag;
+  savePlayer();updateWallet();buildProfile();
+  showToast('✅ Profile saved!');
+}
+
+// ═══════════════════════════════════════════════════
+// AUTH (simulated)
+// ═══════════════════════════════════════════════════
+function doRegister(){
+  const email=document.getElementById('authEmail').value.trim();
+  if(!email||!email.includes('@')){showToast('Please enter a valid email');return;}
+  P.registered=true;P.email=email;
+  P.tokens+=50; // registration bonus
+  savePlayer();updateWallet();
+  showToast('🎉 Welcome! +50 🪙 registration bonus!');
+  showScreen('start');
+}
+function doLogin(){
+  P.registered=true;savePlayer();
+  showToast('✅ Signed in!');showScreen('start');
+}
+function playAnon(){showScreen('start');}
+
+// ═══════════════════════════════════════════════════
+// SHOP (simulated)
+// ═══════════════════════════════════════════════════
+function buyTokens(amount,price){
+  // In production: open Stripe payment
+  // For now: simulate purchase
+  P.tokens+=amount;savePlayer();updateWallet();
+  showToast(`🪙 +${amount} tokens added! (Demo — no charge)`);
+}
+
+// ═══════════════════════════════════════════════════
+// ACHIEVEMENTS
+// ═══════════════════════════════════════════════════
+function unlockAchievement(id){
+  if(!P.achievements)P.achievements=[];
+  if(P.achievements.includes(id))return;
+  P.achievements.push(id);savePlayer();
+  const a=ACHIEVEMENTS[id];
+  if(a)showToast(`🏅 Achievement unlocked: ${a.icon} ${a.name}!`,2500);
+}
+
+// ═══════════════════════════════════════════════════
+// SHARING
+// ═══════════════════════════════════════════════════
+function getShareText(){
+  const score=S.score||P.bestScore||0;
+  const name=P.name||'I';
+  return `${name} scored ${score} pts on Odd One Out! 🧠\nCan you beat me? Play now 👉 https://oddoneout.app`;
+}
+
+function shareWA(){
+  const txt=encodeURIComponent(getShareText());
+  window.open(`https://wa.me/?text=${txt}`,'_blank');
+}
+function shareTG(){
+  const txt=encodeURIComponent(getShareText());
+  const url=encodeURIComponent('https://oddoneout.app');
+  window.open(`https://t.me/share/url?url=${url}&text=${txt}`,'_blank');
+}
+function shareCopy(){
+  navigator.clipboard&&navigator.clipboard.writeText(getShareText())
+    .then(()=>showToast('🔗 Link copied!'))
+    .catch(()=>showToast('Copy: '+getShareText()));
+}
+function shareChallenge(){
+  if(navigator.share){
+    navigator.share({title:'Odd One Out',text:getShareText(),url:'https://oddoneout.app'}).catch(()=>{});
+  }else shareWA();
+}
+
+// ═══════════════════════════════════════════════════
+// TIME HELPERS
+// ═══════════════════════════════════════════════════
+function getTimeLeft(dateStr){
+  const end=new Date(dateStr+'T23:59:59');
+  const now=new Date();
+  const diff=end-now;
+  if(diff<=0)return'Ended';
+  const d=Math.floor(diff/86400000);
+  const h=Math.floor((diff%86400000)/3600000);
+  const m=Math.floor((diff%3600000)/60000);
+  if(d>0)return`${d}d ${h}h`;
+  if(h>0)return`${h}h ${m}m`;
+  return`${m}m`;
+}
+
+// ═══════════════════════════════════════════════════
+// SOUND ENGINE
+// ═══════════════════════════════════════════════════
+let _ac=null;
+function getAC(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();return _ac;}
+function playCorrect(){try{const ac=getAC();[[523.25,0],[783.99,.1]].forEach(([f,t])=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0,ac.currentTime+t);g.gain.linearRampToValueAtTime(.28,ac.currentTime+t+.01);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t+.22);o.start(ac.currentTime+t);o.stop(ac.currentTime+t+.25);});}catch(e){}}
+function playWrong(){try{const ac=getAC();const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sawtooth';o.frequency.setValueAtTime(220,ac.currentTime);o.frequency.exponentialRampToValueAtTime(80,ac.currentTime+.25);g.gain.setValueAtTime(.2,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.3);o.start(ac.currentTime);o.stop(ac.currentTime+.32);}catch(e){}}
+function playTimeout(){try{const ac=getAC();const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='square';o.frequency.value=160;g.gain.setValueAtTime(.14,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.4);o.start(ac.currentTime);o.stop(ac.currentTime+.42);}catch(e){}}
+function playStreak(){try{const ac=getAC();[[523.25,0],[659.25,.1],[1046.5,.2]].forEach(([f,t])=>{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(0,ac.currentTime+t);g.gain.linearRampToValueAtTime(.2,ac.currentTime+t+.01);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t+.18);o.start(ac.currentTime+t);o.stop(ac.currentTime+t+.2);});}catch(e){}}
+
+// ═══════════════════════════════════════════════════
+// SCREEN HOOKS — merged into showScreen
+// ═══════════════════════════════════════════════════
+// (buildLobby, buildLeaderboard, buildProfile called inline in showScreen above)
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+buildStartBg();
+animateLive();
+checkDailyLogin();
+updateWallet();
+</script>
+</body>
+</html>
