@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odd One Out — Admin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#0d0d0f;--surface:#16161a;--surface2:#1e1e24;--border:#2a2a32;
+  --accent:#f0e040;--accent2:#ff5f40;--accent3:#40d9a0;
+  --text:#f0eff5;--muted:#7a7a8c;--token:#f59e0b;
+  --gold:#fbbf24;--purple:#a78bfa;
+  --fd:'Syne',sans-serif;--fb:'DM Sans',sans-serif;
+  --r:12px;--rb:16px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--fb)}
+
+/* ── LAYOUT ── */
+.admin-wrap{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.main{margin-left:220px;flex:1;padding:32px;max-width:1100px}
+
+/* ── SIDEBAR ── */
+.sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid var(--border)}
+.sidebar-logo-title{font-family:var(--fd);font-size:16px;font-weight:800;color:var(--text)}
+.sidebar-logo-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.sidebar-nav{padding:12px 0;flex:1;overflow-y:auto}
+.nav-section{padding:8px 16px 4px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-radius:0;transition:background .1s,color .1s;border-left:2px solid transparent}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--surface2);color:var(--accent);border-left-color:var(--accent)}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center}
+.sidebar-footer{padding:16px;border-top:1px solid var(--border)}
+.sidebar-version{font-size:11px;color:var(--muted)}
+
+/* ── HEADER ── */
+.page-header{margin-bottom:28px}
+.page-title{font-family:var(--fd);font-size:28px;font-weight:800;margin-bottom:4px}
+.page-sub{font-size:14px;color:var(--muted)}
+
+/* ── STAT CARDS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rb);padding:16px}
+.stat-card-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.stat-card-value{font-family:var(--fd);font-size:32px;font-weight:800;color:var(--text)}
+.stat-card-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.stat-card.accent .stat-card-value{color:var(--accent)}
+.stat-card.green .stat-card-value{color:var(--accent3)}
+.stat-card.orange .stat-card-value{color:var(--token)}
+.stat-card.purple .stat-card-value{color:var(--purple)}
+
+/* ── SECTION ── */
+.section{margin-bottom:32px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-family:var(--fd);font-size:18px;font-weight:700}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r);font-family:var(--fb);font-size:13px;font-weight:600;cursor:pointer;transition:transform .08s,opacity .1s;border:none}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#0d0d0f}
+.btn-danger{background:rgba(255,95,64,.12);color:var(--accent2);border:1px solid rgba(255,95,64,.25)}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-success{background:rgba(64,217,160,.12);color:var(--accent3);border:1px solid rgba(64,217,160,.25)}
+.btn-sm{padding:6px 12px;font-size:12px}
+
+/* ── TABLE ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--rb);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 14px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;text-align:left;border-bottom:1px solid var(--border);background:var(--surface2)}
+td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.badge.monthly{background:rgba(251,191,36,.12);color:var(--gold)}
+.badge.challenge{background:rgba(232,121,249,.1);color:#e879f9}
+.badge.daily{background:rgba(167,139,250,.1);color:var(--purple)}
+.badge.active{background:rgba(64,217,160,.12);color:var(--accent3)}
+.badge.ended{background:rgba(255,95,64,.1);color:var(--accent2)}
+.badge.draft{background:var(--surface2);color:var(--muted)}
+
+/* ── FORM ── */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rb);padding:24px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid.cols3{grid-template-columns:1fr 1fr 1fr}
+.form-grid.cols1{grid-template-columns:1fr}
+.field{display:flex;flex-direction:column;gap:5px}
+.field.span2{grid-column:span 2}
+.field-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.field-input{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;font-family:var(--fb);font-size:13px;color:var(--text);outline:none;transition:border-color .15s;width:100%}
+.field-input:focus{border-color:var(--accent)}
+.field-select{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;font-family:var(--fb);font-size:13px;color:var(--text);outline:none;width:100%;cursor:pointer;-webkit-appearance:none}
+.field-select:focus{border-color:var(--accent)}
+.field-textarea{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 12px;font-family:var(--fb);font-size:13px;color:var(--text);outline:none;width:100%;min-height:80px;resize:vertical}
+.field-textarea:focus{border-color:var(--accent)}
+.form-divider{grid-column:span 2;border:none;border-top:1px solid var(--border);margin:4px 0}
+.form-section-title{grid-column:span 2;font-family:var(--fd);font-size:14px;font-weight:700;color:var(--muted);padding-top:4px}
+.form-actions{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+
+/* ── PRIZE TYPE TOGGLE ── */
+.prize-toggle{display:flex;gap:8px}
+.prize-toggle-btn{flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s}
+.prize-toggle-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(240,224,64,.06)}
+
+/* ── PODIUM BUILDER ── */
+.podium-builder{display:flex;flex-direction:column;gap:8px}
+.podium-row-build{display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:var(--r);padding:10px 12px}
+.podium-rank-lbl{font-size:18px;min-width:28px}
+.podium-inputs{display:flex;gap:8px;flex:1}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:28px}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-family:var(--fd);font-size:20px;font-weight:800}
+.modal-close{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;color:var(--muted);font-size:16px}
+
+/* ── LEADERBOARD TABLE ── */
+.lb-preview{background:var(--surface);border:1px solid var(--border);border-radius:var(--rb);overflow:hidden}
+.lb-preview-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.lb-preview-row:last-child{border-bottom:none}
+.lb-preview-row.you{background:rgba(240,224,64,.04)}
+.lb-rank{font-family:var(--fd);font-size:15px;font-weight:800;min-width:24px}
+.lb-flag{font-size:16px;min-width:20px}
+.lb-name-col{flex:1;font-size:13px;font-weight:500}
+.lb-score-col{font-family:var(--fd);font-size:15px;font-weight:800}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border);border-radius:40px;padding:10px 18px;font-size:13px;font-weight:500;color:var(--text);opacity:0;transition:all .2s;pointer-events:none;z-index:2000}
+.toast.show{opacity:1}
+.toast.success{border-color:rgba(64,217,160,.4);color:var(--accent3)}
+.toast.error{border-color:rgba(255,95,64,.4);color:var(--accent2)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:6px;margin-bottom:16px}
+.tab{padding:7px 14px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface2);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s}
+.tab.active{background:var(--surface);border-color:var(--accent);color:var(--accent)}
+
+/* ── ACTIVITY FEED ── */
+.activity-feed{display:flex;flex-direction:column;gap:0}
+.activity-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--border)}
+.activity-item:last-child{border-bottom:none}
+.activity-icon{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+.activity-text{flex:1;font-size:13px}
+.activity-text strong{color:var(--text)}
+.activity-time{font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{width:60px}
+  .sidebar-logo,.nav-section,.nav-item span,.sidebar-footer{display:none}
+  .main{margin-left:60px;padding:16px}
+  .form-grid{grid-template-columns:1fr}
+  .form-grid.cols3{grid-template-columns:1fr}
+  .field.span2{grid-column:span 1}
+  .form-section-title,.form-divider{grid-column:span 1}
+  .stats-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="admin-wrap">
+
+<!-- ── SIDEBAR ── -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-title">🧠 Odd One Out</div>
+    <div class="sidebar-logo-sub">Admin Panel</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">📊</span><span>Dashboard</span>
+    </div>
+    <div class="nav-section">Competitions</div>
+    <div class="nav-item" onclick="showPage('competitions')">
+      <span class="nav-icon">🏆</span><span>All Competitions</span>
+    </div>
+    <div class="nav-item" onclick="showPage('new-comp')">
+      <span class="nav-icon">➕</span><span>New Competition</span>
+    </div>
+    <div class="nav-section">Players</div>
+    <div class="nav-item" onclick="showPage('leaderboard')">
+      <span class="nav-icon">🥇</span><span>Leaderboard</span>
+    </div>
+    <div class="nav-item" onclick="showPage('players')">
+      <span class="nav-icon">👥</span><span>Players</span>
+    </div>
+    <div class="nav-section">Economy</div>
+    <div class="nav-item" onclick="showPage('tokens')">
+      <span class="nav-icon">🪙</span><span>Token Config</span>
+    </div>
+    <div class="nav-section">Content</div>
+    <div class="nav-item" onclick="showPage('questions')">
+      <span class="nav-icon">❓</span><span>Questions</span>
+    </div>
+    <div class="nav-section">Settings</div>
+    <div class="nav-item" onclick="showPage('settings')">
+      <span class="nav-icon">⚙️</span><span>Settings</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-version" id="adminStatus">v1.0.0</div>
+    <div style="margin-top:6px;font-size:11px;color:var(--muted)" id="adminAuthStatus"></div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main" id="main"></div>
+
+</div>
+
+<!-- ── MODAL ── -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Edit Competition</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// SUPABASE CONNECTION
+// ═══════════════════════════════════════════════════════════
+const SB_URL = 'https://pftxvrpujmfiegehbuky.supabase.co';
+const SB_KEY = 'sb_publishable_8aclUgn-7kTrUJWzRz11IQ_MIs_klHp';
+
+const sb = {
+  _token: localStorage.getItem('sb_token') || null,
+
+  headers(extra={}) {
+    const h = {'Content-Type':'application/json','apikey':SB_KEY};
+    if(this._token) h['Authorization'] = 'Bearer ' + this._token;
+    return Object.assign(h, extra);
+  },
+
+  async rest(table, opts={}) {
+    const {method='GET',body,select='*',filters=[],order,limit,single=false} = opts;
+    let url = `${SB_URL}/rest/v1/${table}?select=${select}`;
+    filters.forEach(f => url += '&' + f);
+    if(order) url += '&order=' + order;
+    if(limit) url += '&limit=' + limit;
+    const h = this.headers();
+    if(single) h['Accept'] = 'application/vnd.pgrst.object+json';
+    if(method==='POST') h['Prefer'] = 'return=representation';
+    if(method==='PATCH'||method==='DELETE') h['Prefer'] = 'return=minimal';
+    const res = await fetch(url, {method, headers:h, body:body?JSON.stringify(body):undefined});
+    if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.message||res.statusText); }
+    return res.status===204 ? null : res.json();
+  },
+
+  async signIn(email, password) {
+    const res = await fetch(`${SB_URL}/auth/v1/token?grant_type=password`, {
+      method:'POST', headers:this.headers(), body:JSON.stringify({email,password})
+    });
+    const data = await res.json();
+    if(data.access_token){
+      this._token = data.access_token;
+      localStorage.setItem('sb_token', data.access_token);
+    }
+    return data;
+  },
+
+  signOut(){ this._token=null; localStorage.removeItem('sb_token'); },
+  isLoggedIn(){ return !!this._token; }
+};
+
+// ═══════════════════════════════════════════════════
+// DATA STORE (localStorage)
+// ═══════════════════════════════════════════════════
+function loadData(key,def){
+  try{const v=localStorage.getItem('admin_'+key);return v?JSON.parse(v):def;}catch(e){return def;}
+}
+function saveData(key,val){
+  try{localStorage.setItem('admin_'+key,JSON.stringify(val));}catch(e){}
+}
+
+// Default competitions
+const DEFAULT_COMPS = [
+  {
+    id:'monthly-may',type:'monthly',name:'May Championship',
+    status:'active',entryCost:80,endDate:'2025-05-31',
+    players:1247,entries:1247,
+    prize:{type:'physical',icon:'⌚',name:'Apple Watch Series 9',value:'$399'},
+    podium:[
+      {rank:'🥇',prize:'Apple Watch Series 9',sub:'$399 value'},
+      {rank:'🥈',prize:'AirPods Pro',sub:'$249 value'},
+      {rank:'🥉',prize:'500 Tokens',sub:'🪙 500'},
+    ],
+    created:'2025-05-01',
+  },
+  {
+    id:'challenge-science',type:'challenge',name:'Science Genius',
+    status:'active',entryCost:50,endDate:'2025-05-20',
+    players:342,entries:342,
+    prize:{type:'tokens',icon:'🪙',name:'500 Tokens',value:'Top 3 win'},
+    podium:[
+      {rank:'🥇',prize:'300 Tokens',sub:'🪙 300'},
+      {rank:'🥈',prize:'150 Tokens',sub:'🪙 150'},
+      {rank:'🥉',prize:'50 Tokens',sub:'🪙 50'},
+    ],
+    created:'2025-05-10',
+  },
+  {
+    id:'daily',type:'daily',name:'Daily Tournament',
+    status:'active',entryCost:20,endDate:null,
+    players:3841,entries:3841,
+    prize:{type:'tokens',icon:'🪙',name:'200 Tokens',value:'Top 3 win'},
+    podium:[
+      {rank:'🥇',prize:'200 Tokens',sub:'🪙 200'},
+      {rank:'🥈',prize:'100 Tokens',sub:'🪙 100'},
+      {rank:'🥉',prize:'50 Tokens',sub:'🪙 50'},
+    ],
+    created:'2025-05-01',
+  },
+];
+
+const DEFAULT_TOKEN_CONFIG = {
+  packs:[
+    {id:'starter',name:'Starter',amount:100,price:'$0.99',bonus:0},
+    {id:'best',name:'Best Value',amount:550,price:'$4.99',bonus:50},
+    {id:'pro',name:'Pro Pack',amount:1200,price:'$9.99',bonus:200},
+  ],
+  earn:{
+    daily_login:10,streak_7:50,correct_3:5,invite:100,register:50,
+    free_perfect:15,free_80pct:8,free_60pct:4,free_any:2,
+  },
+  cost:{challenge:50,daily:20,monthly:80},
+};
+
+const DEFAULT_SETTINGS = {
+  gameName:'Odd One Out',
+  shareUrl:'https://oddoneout.app',
+  timerSeconds:10,
+  freeQuestions:12,
+  challengeLevels:10,
+  maintenanceMode:false,
+};
+
+let COMPS = loadData('comps', DEFAULT_COMPS);
+let TOKEN_CFG = loadData('tokens', DEFAULT_TOKEN_CONFIG);
+let SETTINGS = loadData('settings', DEFAULT_SETTINGS);
+
+// Fake player data for demo
+const FAKE_PLAYERS = [
+  {name:'NightOwl99',flag:'🇩🇪',avatar:'🦊',tokens:340,games:47,streak:12,score:940,registered:true,joined:'2025-04-15',achs:3},
+  {name:'QuizKing',flag:'🇺🇸',avatar:'👑',tokens:210,games:63,streak:8,score:920,registered:true,joined:'2025-04-20',achs:4},
+  {name:'BrainBlast',flag:'🇭🇷',avatar:'🧠',tokens:580,games:35,streak:5,score:880,registered:true,joined:'2025-05-01',achs:2},
+  {name:'TrickMaster',flag:'🇯🇵',avatar:'🎩',tokens:90,games:28,streak:3,score:860,registered:true,joined:'2025-05-03',achs:2},
+  {name:'SpeedDemon',flag:'🇬🇧',avatar:'⚡',tokens:420,games:19,streak:7,score:820,registered:true,joined:'2025-05-05',achs:1},
+  {name:'CuriousCat',flag:'🇫🇷',avatar:'🐯',tokens:150,games:22,streak:4,score:790,registered:true,joined:'2025-05-06',achs:1},
+  {name:'DeepThought',flag:'🇧🇷',avatar:'🤖',tokens:60,games:14,streak:2,score:740,registered:false,joined:'2025-05-08',achs:0},
+  {name:'Mastermind',flag:'🇰🇷',avatar:'💎',tokens:280,games:31,streak:6,score:710,registered:true,joined:'2025-05-09',achs:1},
+];
+
+const FAKE_ACTIVITY = [
+  {icon:'🏆',text:'<strong>NightOwl99</strong> completed May Championship with score 940',time:'2m ago'},
+  {icon:'🪙',text:'<strong>BrainBlast</strong> purchased 550 tokens ($4.99)',time:'7m ago'},
+  {icon:'🆕',text:'<strong>SpeedDemon</strong> registered a new account',time:'14m ago'},
+  {icon:'⚡',text:'<strong>QuizKing</strong> entered Science Genius challenge',time:'22m ago'},
+  {icon:'🔥',text:'<strong>TrickMaster</strong> achieved 7-day streak bonus (+50 tokens)',time:'38m ago'},
+  {icon:'🪙',text:'<strong>CuriousCat</strong> purchased 100 tokens ($0.99)',time:'1h ago'},
+  {icon:'🏆',text:'<strong>Mastermind</strong> entered Daily Tournament',time:'1h ago'},
+  {icon:'🆕',text:'<strong>DeepThought</strong> started playing as guest',time:'2h ago'},
+];
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+let currentPage='dashboard';
+
+function showPage(page){
+  currentPage=page;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navMap={
+    dashboard:0,competitions:2,
+    'new-comp':3,leaderboard:4,players:5,
+    tokens:6,questions:7,settings:8,
+  };
+  const items=document.querySelectorAll('.nav-item');
+  // match by text content
+  items.forEach(item=>{
+    const span=item.querySelector('span:last-child');
+    if(!span)return;
+    const pageMap={
+      'dashboard':'Dashboard','competitions':'All Competitions',
+      'new-comp':'New Competition','leaderboard':'Leaderboard',
+      'players':'Players','tokens':'Token Config',
+      'questions':'Questions','settings':'Settings',
+    };
+    if(span.textContent===pageMap[page])item.classList.add('active');
+  });
+  renderPage(page);
+}
+
+function renderPage(page){
+  const main=document.getElementById('main');
+  switch(page){
+    case 'dashboard':    main.innerHTML=pageDashboard();break;
+    case 'competitions': main.innerHTML=pageCompetitions();break;
+    case 'new-comp':     main.innerHTML=pageNewComp();break;
+    case 'leaderboard':  main.innerHTML=pageLeaderboard();break;
+    case 'players':      main.innerHTML=pagePlayers();break;
+    case 'tokens':       main.innerHTML=pageTokens();break;
+    case 'questions':    pageQuestions();return; // async — handles own innerHTML
+    case 'settings':     main.innerHTML=pageSettings();break;
+    default:             main.innerHTML=pageDashboard();
+  }
+  bindFormEvents();
+}
+
+// ═══════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════
+function pageDashboard(){
+  const totalPlayers=window._playerCount||FAKE_PLAYERS.length;
+  const activeComps=COMPS.filter(c=>c.status==='active').length;
+  const totalEntries=COMPS.reduce((s,c)=>s+(c.entries||0),0);
+  const totalRevenue=(totalEntries*2.4).toFixed(0);
+  const dbStatus=sb.isLoggedIn()
+    ? '<span style="color:var(--correct)">✅ Connected to Supabase</span>'
+    : '<span style="color:var(--accent2)">⚠️ Not connected — <a href="#" onclick="showAdminLogin()" style="color:var(--accent)">Sign in</a> to sync with DB</span>';
+
+  return `
+    <div class="page-header">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">${dbStatus}</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card accent">
+        <div class="stat-card-label">Total Players</div>
+        <div class="stat-card-value">${totalPlayers.toLocaleString()}</div>
+        <div class="stat-card-sub">From Supabase DB</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-card-label">Active Competitions</div>
+        <div class="stat-card-value">${activeComps}</div>
+        <div class="stat-card-sub">${COMPS.length} total created</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-card-label">Token Entries</div>
+        <div class="stat-card-value">${totalEntries.toLocaleString()}</div>
+        <div class="stat-card-sub">Across all competitions</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-card-label">Est. Revenue</div>
+        <div class="stat-card-value">$${totalRevenue}</div>
+        <div class="stat-card-sub">From token purchases</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Active Competitions</div>
+          <button class="btn btn-primary btn-sm" onclick="showPage('new-comp')">+ New</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Name</th><th>Type</th><th>Entries</th><th>Status</th></tr>
+            ${COMPS.map(c=>`
+              <tr onclick="editComp('${c.id}')" style="cursor:pointer">
+                <td><strong>${c.name}</strong></td>
+                <td><span class="badge ${c.type}">${c.type}</span></td>
+                <td>${c.entries.toLocaleString()}</td>
+                <td><span class="badge ${c.status}">${c.status}</span></td>
+              </tr>
+            `).join('')}
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">
+          <div class="section-title">Recent Activity</div>
+        </div>
+        <div class="table-wrap">
+          <div class="activity-feed">
+            ${FAKE_ACTIVITY.map(a=>`
+              <div class="activity-item">
+                <div class="activity-icon">${a.icon}</div>
+                <div class="activity-text">${a.text}</div>
+                <div class="activity-time">${a.time}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+// COMPETITIONS LIST
+// ═══════════════════════════════════════════════════
+function pageCompetitions(){
+  return `
+    <div class="page-header">
+      <div class="page-title">Competitions</div>
+      <div class="page-sub">Manage all active and past competitions</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">All Competitions</div>
+        <button class="btn btn-primary" onclick="showPage('new-comp')">+ New Competition</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <tr>
+            <th>Name</th><th>Type</th><th>Prize</th><th>Entry Cost</th>
+            <th>Entries</th><th>End Date</th><th>Status</th><th>Actions</th>
+          </tr>
+          ${COMPS.map(c=>`
+            <tr>
+              <td><strong>${c.name}</strong></td>
+              <td><span class="badge ${c.type}">${c.type}</span></td>
+              <td>${c.prize.icon} ${c.prize.name}</td>
+              <td>🪙 ${c.entryCost}</td>
+              <td>${c.entries.toLocaleString()}</td>
+              <td style="color:var(--muted)">${c.endDate||'Daily'}</td>
+              <td><span class="badge ${c.status}">${c.status}</span></td>
+              <td>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-ghost btn-sm" onclick="editComp('${c.id}')">Edit</button>
+                  <button class="btn btn-ghost btn-sm" onclick="viewLb('${c.id}')">LB</button>
+                  ${c.status==='active'
+                    ?`<button class="btn btn-danger btn-sm" onclick="endComp('${c.id}')">End</button>`
+                    :`<button class="btn btn-success btn-sm" onclick="activateComp('${c.id}')">Activate</button>`
+                  }
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+// NEW / EDIT COMPETITION FORM
+// ═══════════════════════════════════════════════════
+function pageNewComp(comp){
+  const c=comp||{
+    id:'',type:'monthly',name:'',status:'draft',entryCost:80,endDate:'',
+    players:0,entries:0,
+    prize:{type:'physical',icon:'🏆',name:'',value:''},
+    podium:[
+      {rank:'🥇',prize:'',sub:''},
+      {rank:'🥈',prize:'',sub:''},
+      {rank:'🥉',prize:'',sub:''},
+    ],
+  };
+  const isEdit=!!comp;
+
+  return `
+    <div class="page-header">
+      <div class="page-title">${isEdit?'Edit Competition':'New Competition'}</div>
+      <div class="page-sub">${isEdit?`Editing: ${c.name}`:'Configure and launch a new competition'}</div>
+    </div>
+
+    <div class="form-card">
+      <form id="compForm" onsubmit="return false">
+        <div class="form-grid">
+          <div class="field span2">
+            <div class="field-label">Competition Name</div>
+            <input class="field-input" id="cf_name" value="${c.name}" placeholder="e.g. May Championship" required>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Type</div>
+            <select class="field-select" id="cf_type">
+              <option value="monthly" ${c.type==='monthly'?'selected':''}>🏆 Monthly Championship</option>
+              <option value="challenge" ${c.type==='challenge'?'selected':''}>⚡ Special Challenge</option>
+              <option value="daily" ${c.type==='daily'?'selected':''}>📅 Daily Tournament</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Entry Cost (tokens)</div>
+            <input class="field-input" id="cf_cost" type="number" value="${c.entryCost}" min="0" placeholder="80">
+          </div>
+
+          <div class="field">
+            <div class="field-label">End Date</div>
+            <input class="field-input" id="cf_end" type="date" value="${c.endDate||''}">
+          </div>
+
+          <div class="field">
+            <div class="field-label">Status</div>
+            <select class="field-select" id="cf_status">
+              <option value="draft" ${c.status==='draft'?'selected':''}>Draft</option>
+              <option value="active" ${c.status==='active'?'selected':''}>Active</option>
+              <option value="ended" ${c.status==='ended'?'selected':''}>Ended</option>
+            </select>
+          </div>
+
+          <hr class="form-divider">
+          <div class="form-section-title">🏅 Prize Configuration</div>
+
+          <div class="field span2">
+            <div class="field-label">Prize Type</div>
+            <div class="prize-toggle">
+              <div class="prize-toggle-btn ${c.prize.type==='physical'?'active':''}" onclick="setPrizeType('physical',this)">🎁 Physical Prize</div>
+              <div class="prize-toggle-btn ${c.prize.type==='tokens'?'active':''}" onclick="setPrizeType('tokens',this)">🪙 Tokens</div>
+            </div>
+            <input type="hidden" id="cf_prize_type" value="${c.prize.type}">
+          </div>
+
+          <div class="field">
+            <div class="field-label">Prize Icon (emoji)</div>
+            <input class="field-input" id="cf_prize_icon" value="${c.prize.icon}" placeholder="⌚" maxlength="4">
+          </div>
+
+          <div class="field">
+            <div class="field-label">Prize Name</div>
+            <input class="field-input" id="cf_prize_name" value="${c.prize.name}" placeholder="Apple Watch Series 9">
+          </div>
+
+          <div class="field span2">
+            <div class="field-label">Prize Value / Description</div>
+            <input class="field-input" id="cf_prize_value" value="${c.prize.value}" placeholder="$399 — or '2,000 tokens'">
+          </div>
+
+          <hr class="form-divider">
+          <div class="form-section-title">🥇 Podium Prizes (top 3)</div>
+
+          <div class="field span2">
+            <div class="podium-builder">
+              ${c.podium.map((p,i)=>`
+                <div class="podium-row-build">
+                  <div class="podium-rank-lbl">${p.rank}</div>
+                  <div class="podium-inputs">
+                    <input class="field-input" id="cf_pod${i}_prize" value="${p.prize}" placeholder="Prize name" style="flex:2">
+                    <input class="field-input" id="cf_pod${i}_sub" value="${p.sub}" placeholder="e.g. $399 value" style="flex:1">
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" onclick="showPage('competitions')">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveComp('${c.id}')">
+            ${isEdit?'Save Changes':'Launch Competition'}
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
+function setPrizeType(type,btn){
+  document.querySelectorAll('.prize-toggle-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('cf_prize_type').value=type;
+  if(type==='tokens'){
+    document.getElementById('cf_prize_icon').value='🪙';
+    document.getElementById('cf_prize_name').value='Tokens';
+  }
+}
+
+async function saveComp(editId){
+  const name=document.getElementById('cf_name').value.trim();
+  if(!name){showToast('Competition name is required','error');return;}
+
+  const comp={
+    id:editId||'comp_'+Date.now(),
+    name,
+    type:document.getElementById('cf_type').value,
+    status:document.getElementById('cf_status').value,
+    entry_cost:parseInt(document.getElementById('cf_cost').value)||80,
+    end_date:document.getElementById('cf_end').value||null,
+    prize_type:document.getElementById('cf_prize_type').value,
+    prize_icon:document.getElementById('cf_prize_icon').value||'🏆',
+    prize_name:document.getElementById('cf_prize_name').value||'Prize',
+    prize_value:document.getElementById('cf_prize_value').value,
+    podium:[0,1,2].map(i=>({
+      rank:['🥇','🥈','🥉'][i],
+      prize:document.getElementById(`cf_pod${i}_prize`).value,
+      sub:document.getElementById(`cf_pod${i}_sub`).value,
+    })),
+  };
+
+  try{
+    if(editId){
+      await sb.rest('competitions',{method:'PATCH',body:comp,filters:['id=eq.'+editId]});
+      const idx=COMPS.findIndex(c=>c.id===editId);
+      if(idx>=0) COMPS[idx]={...COMPS[idx],...comp};
+    }else{
+      await sb.rest('competitions',{method:'POST',body:comp});
+      COMPS.push({...comp,players:0,entries:0});
+    }
+    saveData('comps',COMPS);
+    showToast(editId?'✅ Competition updated!':'🚀 Competition launched!','success');
+    showPage('competitions');
+  }catch(e){
+    // Fallback to localStorage if not connected
+    if(editId){
+      const idx=COMPS.findIndex(c=>c.id===editId);
+      if(idx>=0) COMPS[idx]={...COMPS[idx],...comp,entryCost:comp.entry_cost};
+    }else{
+      COMPS.push({...comp,entryCost:comp.entry_cost,players:0,entries:0});
+    }
+    saveData('comps',COMPS);
+    showToast((editId?'✅ Updated':'🚀 Launched')+' (local only — connect to sync)','success');
+    showPage('competitions');
+  }
+}
+
+function editComp(id){
+  const comp=COMPS.find(c=>c.id===id);
+  if(!comp)return;
+  document.getElementById('main').innerHTML=pageNewComp(comp);
+  bindFormEvents();
+}
+
+async function endComp(id){
+  if(!confirm('End this competition? Players will no longer be able to enter.'))return;
+  try{
+    await sb.rest('competitions',{method:'PATCH',body:{status:'ended'},filters:['id=eq.'+id]});
+  }catch(e){ console.warn('DB update failed, using local'); }
+  const c=COMPS.find(c=>c.id===id);
+  if(c){c.status='ended';saveData('comps',COMPS);showToast('Competition ended','success');showPage('competitions');}
+}
+
+async function activateComp(id){
+  try{
+    await sb.rest('competitions',{method:'PATCH',body:{status:'active'},filters:['id=eq.'+id]});
+  }catch(e){ console.warn('DB update failed, using local'); }
+  const c=COMPS.find(c=>c.id===id);
+  if(c){c.status='active';saveData('comps',COMPS);showToast('Competition activated!','success');showPage('competitions');}
+}
+
+function viewLb(id){
+  S_lb_comp=id;showPage('leaderboard');
+}
+
+// ═══════════════════════════════════════════════════
+// LEADERBOARD
+// ═══════════════════════════════════════════════════
+let S_lb_comp=null;
+
+function pageLeaderboard(){
+  const comp=S_lb_comp?COMPS.find(c=>c.id===S_lb_comp):COMPS[0];
+  return `
+    <div class="page-header">
+      <div class="page-title">Leaderboard</div>
+      <div class="page-sub">View rankings for any competition</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <select class="field-select" style="width:auto;padding:8px 12px;font-size:13px" onchange="S_lb_comp=this.value;renderPage('leaderboard')">
+          ${COMPS.map(c=>`<option value="${c.id}" ${comp&&comp.id===c.id?'selected':''}>${c.name}</option>`).join('')}
+        </select>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="exportLb()">Export CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="pickWinner()">🏆 Pick Winner</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <tr><th>#</th><th>Player</th><th>Country</th><th>Score</th><th>Games</th><th>Best</th><th>Joined</th></tr>
+          ${FAKE_PLAYERS.sort((a,b)=>b.score-a.score).map((p,i)=>`
+            <tr>
+              <td><strong>${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</strong></td>
+              <td><span style="font-size:16px">${p.avatar}</span> <strong>${p.name}</strong></td>
+              <td>${p.flag}</td>
+              <td style="font-family:var(--fd);font-weight:800;color:var(--accent)">${p.score}</td>
+              <td>${p.games}</td>
+              <td>${p.score}</td>
+              <td style="color:var(--muted)">${p.joined}</td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function pickWinner(){
+  const winner=FAKE_PLAYERS.sort((a,b)=>b.score-a.score)[0];
+  showToast(`🏆 Winner: ${winner.name} with ${winner.score} points!`,'success');
+}
+
+function exportLb(){
+  const rows=[['Rank','Name','Country','Score','Games'],...FAKE_PLAYERS.sort((a,b)=>b.score-a.score).map((p,i)=>[i+1,p.name,p.flag,p.score,p.games])];
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='leaderboard.csv';a.click();
+  showToast('📥 CSV downloaded','success');
+}
+
+// ═══════════════════════════════════════════════════
+// PLAYERS
+// ═══════════════════════════════════════════════════
+function pagePlayers(){
+  return `
+    <div class="page-header">
+      <div class="page-title">Players</div>
+      <div class="page-sub">${FAKE_PLAYERS.length} registered players</div>
+    </div>
+
+    <div class="section">
+      <div class="table-wrap">
+        <table>
+          <tr><th>Player</th><th>Country</th><th>Tokens</th><th>Games</th><th>Streak</th><th>Best Score</th><th>Registered</th><th>Joined</th></tr>
+          ${FAKE_PLAYERS.map(p=>`
+            <tr>
+              <td><span style="font-size:15px">${p.avatar}</span> <strong>${p.name}</strong></td>
+              <td>${p.flag}</td>
+              <td style="color:var(--token);font-weight:700">🪙 ${p.tokens}</td>
+              <td>${p.games}</td>
+              <td>${p.streak>0?'🔥'+p.streak:p.streak}</td>
+              <td style="font-family:var(--fd);font-weight:700">${p.score}</td>
+              <td><span class="badge ${p.registered?'active':'draft'}">${p.registered?'Yes':'Guest'}</span></td>
+              <td style="color:var(--muted)">${p.joined}</td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════
+// TOKEN CONFIG
+// ═══════════════════════════════════════════════════
+function pageTokens(){
+  const cfg=TOKEN_CFG;
+  return `
+    <div class="page-header">
+      <div class="page-title">Token Economy</div>
+      <div class="page-sub">Configure prices, earn rates, and competition costs</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:12px">Token Packs (Shop)</div>
+        <div class="form-card">
+          ${cfg.packs.map((pack,i)=>`
+            <div style="margin-bottom:16px;padding-bottom:16px;border-bottom:${i<cfg.packs.length-1?'1px solid var(--border)':'none'}">
+              <div style="font-weight:600;margin-bottom:8px;color:var(--muted);font-size:12px;text-transform:uppercase">Pack ${i+1}${pack.id==='best'?' — Best Value':''}</div>
+              <div class="form-grid">
+                <div class="field">
+                  <div class="field-label">Tokens</div>
+                  <input class="field-input" id="pack_${i}_amount" type="number" value="${pack.amount}">
+                </div>
+                <div class="field">
+                  <div class="field-label">Price</div>
+                  <input class="field-input" id="pack_${i}_price" value="${pack.price}" placeholder="$4.99">
+                </div>
+                <div class="field">
+                  <div class="field-label">Bonus tokens</div>
+                  <input class="field-input" id="pack_${i}_bonus" type="number" value="${pack.bonus}">
+                </div>
+                <div class="field">
+                  <div class="field-label">Label</div>
+                  <input class="field-input" id="pack_${i}_name" value="${pack.name}">
+                </div>
+              </div>
+            </div>
+          `).join('')}
+          <button class="btn btn-primary" onclick="saveTokenPacks()">Save Packs</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="section">
+          <div class="section-title" style="margin-bottom:12px">Entry Costs</div>
+          <div class="form-card">
+            <div class="form-grid">
+              <div class="field">
+                <div class="field-label">Challenge Mode</div>
+                <input class="field-input" id="cost_challenge" type="number" value="${cfg.cost.challenge}">
+              </div>
+              <div class="field">
+                <div class="field-label">Daily Tournament</div>
+                <input class="field-input" id="cost_daily" type="number" value="${cfg.cost.daily}">
+              </div>
+              <div class="field span2">
+                <div class="field-label">Monthly Championship</div>
+                <input class="field-input" id="cost_monthly" type="number" value="${cfg.cost.monthly}">
+              </div>
+            </div>
+            <button class="btn btn-primary" style="margin-top:14px" onclick="saveTokenCosts()">Save Costs</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title" style="margin-bottom:12px">Earn Rates (free tokens)</div>
+          <div class="form-card">
+            <div class="form-grid">
+              <div class="field">
+                <div class="field-label">Daily Login</div>
+                <input class="field-input" id="earn_daily" type="number" value="${cfg.earn.daily_login}">
+              </div>
+              <div class="field">
+                <div class="field-label">7-Day Streak</div>
+                <input class="field-input" id="earn_streak7" type="number" value="${cfg.earn.streak_7}">
+              </div>
+              <div class="field">
+                <div class="field-label">3 Correct in a Row</div>
+                <input class="field-input" id="earn_combo" type="number" value="${cfg.earn.correct_3}">
+              </div>
+              <div class="field">
+                <div class="field-label">Invite a Friend</div>
+                <input class="field-input" id="earn_invite" type="number" value="${cfg.earn.invite}">
+              </div>
+              <div class="field">
+                <div class="field-label">Registration Bonus</div>
+                <input class="field-input" id="earn_register" type="number" value="${cfg.earn.register}">
+              </div>
+              <div class="field">
+                <div class="field-label">Free Mode Perfect</div>
+                <input class="field-input" id="earn_perfect" type="number" value="${cfg.earn.free_perfect}">
+              </div>
+            </div>
+            <button class="btn btn-primary" style="margin-top:14px" onclick="saveEarnRates()">Save Earn Rates</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function saveTokenPacks(){
+  TOKEN_CFG.packs=TOKEN_CFG.packs.map((p,i)=>({
+    ...p,
+    amount:parseInt(document.getElementById(`pack_${i}_amount`).value)||p.amount,
+    price:document.getElementById(`pack_${i}_price`).value||p.price,
+    bonus:parseInt(document.getElementById(`pack_${i}_bonus`).value)||0,
+    name:document.getElementById(`pack_${i}_name`).value||p.name,
+  }));
+  saveData('tokens',TOKEN_CFG);
+  try{localStorage.setItem('TOKEN_CONFIG',JSON.stringify(TOKEN_CFG));}catch(e){}
+  showToast('✅ Token packs saved!','success');
+}
+
+function saveTokenCosts(){
+  TOKEN_CFG.cost={
+    challenge:parseInt(document.getElementById('cost_challenge').value)||50,
+    daily:parseInt(document.getElementById('cost_daily').value)||20,
+    monthly:parseInt(document.getElementById('cost_monthly').value)||80,
+  };
+  saveData('tokens',TOKEN_CFG);
+  try{localStorage.setItem('TOKEN_CONFIG',JSON.stringify(TOKEN_CFG));}catch(e){}
+  showToast('✅ Entry costs saved!','success');
+}
+
+function saveEarnRates(){
+  TOKEN_CFG.earn={
+    daily_login:parseInt(document.getElementById('earn_daily').value)||10,
+    streak_7:parseInt(document.getElementById('earn_streak7').value)||50,
+    correct_3:parseInt(document.getElementById('earn_combo').value)||5,
+    invite:parseInt(document.getElementById('earn_invite').value)||100,
+    register:parseInt(document.getElementById('earn_register').value)||50,
+    free_perfect:parseInt(document.getElementById('earn_perfect').value)||15,
+    free_80pct:TOKEN_CFG.earn.free_80pct,
+    free_60pct:TOKEN_CFG.earn.free_60pct,
+    free_any:TOKEN_CFG.earn.free_any,
+  };
+  saveData('tokens',TOKEN_CFG);
+  try{localStorage.setItem('TOKEN_CONFIG',JSON.stringify(TOKEN_CFG));}catch(e){}
+  showToast('✅ Earn rates saved!','success');
+}
+
+// ═══════════════════════════════════════════════════
+// QUESTIONS
+// ═══════════════════════════════════════════════════
+async function pageQuestions(){
+  // Load real stats from DB
+  let total=0, emoji=0, trick=0, expert=0;
+  let byDiff={1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0,9:0,10:0};
+
+  try{
+    const rows = await sb.rest('questions',{
+      select:'id,difficulty,type,correct_index',
+      filters:['active=eq.true'],
+      limit:500
+    });
+    if(rows){
+      total=rows.length;
+      rows.forEach(q=>{
+        if(q.type==='emoji') emoji++;
+        if(q.correct_index===null) trick++;
+        if(q.difficulty>=7) expert++;
+        if(byDiff[q.difficulty]!==undefined) byDiff[q.difficulty]++;
+      });
+    }
+  }catch(e){
+    // fallback to static if not connected
+    total=122; emoji=13; trick=16; expert=12;
+  }
+
+  document.getElementById('main').innerHTML = `
+    <div class="page-header">
+      <div class="page-title">Questions</div>
+      <div class="page-sub">Question pool — live data from Supabase</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card accent"><div class="stat-card-label">Total Questions</div><div class="stat-card-value">${total}</div></div>
+      <div class="stat-card green"><div class="stat-card-label">Emoji Questions</div><div class="stat-card-value">${emoji}</div></div>
+      <div class="stat-card orange"><div class="stat-card-label">Trick Questions</div><div class="stat-card-value">${trick}</div></div>
+      <div class="stat-card purple"><div class="stat-card-label">Expert (7-8)</div><div class="stat-card-value">${expert}</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-title">By Difficulty</div></div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Difficulty</th><th>Label</th><th>Count</th><th>Used in Free Mode</th></tr>
+          <tr><td>1–2</td><td><span class="badge active">Easy</span></td><td>${(byDiff[1]||0)+(byDiff[2]||0)}</td><td>First 3 questions</td></tr>
+          <tr><td>3–4</td><td><span class="badge monthly">Medium</span></td><td>${(byDiff[3]||0)+(byDiff[4]||0)}</td><td>Questions 4–7</td></tr>
+          <tr><td>5–6</td><td><span class="badge challenge">Hard</span></td><td>${(byDiff[5]||0)+(byDiff[6]||0)}</td><td>Questions 8–10</td></tr>
+          <tr><td>7–8</td><td><span style="color:var(--purple);font-weight:700">Expert</span></td><td>${(byDiff[7]||0)+(byDiff[8]||0)}</td><td>Questions 11–12</td></tr>
+          <tr><td>9–10</td><td><span style="color:var(--accent2);font-weight:700">Double</span></td><td>${(byDiff[9]||0)+(byDiff[10]||0)}</td><td>Double or Nothing only</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><div class="section-title">Add a Question</div></div>
+      <div class="form-card">
+        <div class="form-grid">
+          <div class="field span2">
+            <div class="field-label">Question Text</div>
+            <input class="field-input" id="q_text" placeholder="Which one doesn't belong?">
+          </div>
+          <div class="field">
+            <div class="field-label">Difficulty (1–8)</div>
+            <input class="field-input" id="q_diff" type="number" min="1" max="8" value="3">
+          </div>
+          <div class="field">
+            <div class="field-label">Category</div>
+            <select class="field-select" id="q_cat">
+              <option value="general">General</option>
+              <option value="science">Science</option>
+              <option value="tech">Tech</option>
+              <option value="geography">Geography</option>
+              <option value="animals">Animals</option>
+              <option value="music">Music</option>
+              <option value="culture">Culture</option>
+              <option value="food">Food</option>
+              <option value="sports">Sports</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="field-label">Type</div>
+            <select class="field-select" id="q_type">
+              <option value="text">Text options</option>
+              <option value="trick">Trick (They all belong)</option>
+            </select>
+          </div>
+          <div class="field span2">
+            <div class="field-label">Options (one per line, 6 options)</div>
+            <textarea class="field-textarea" id="q_options" placeholder="Option 1&#10;Option 2&#10;Option 3&#10;Option 4&#10;Option 5&#10;Option 6"></textarea>
+          </div>
+          <div class="field">
+            <div class="field-label">Correct Answer Index (0–5, blank = trick)</div>
+            <input class="field-input" id="q_correct" type="number" min="0" max="5" placeholder="2">
+          </div>
+          <div class="field">
+            <div class="field-label">Explanation</div>
+            <input class="field-input" id="q_exp" placeholder="Brief explanation shown after answer">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="addQuestion()">Add to DB</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function addQuestion(){
+  const txt=document.getElementById('q_text').value.trim();
+  if(!txt){showToast('Question text is required','error');return;}
+
+  const opts=document.getElementById('q_options').value.trim().split('\n').filter(Boolean);
+  if(opts.length<2){showToast('Need at least 2 options','error');return;}
+
+  const correctVal=document.getElementById('q_correct').value.trim();
+  const qType=document.getElementById('q_type').value;
+
+  const q={
+    question:txt,
+    options:JSON.stringify(opts),
+    correct_index:qType==='trick'?null:(correctVal===''?null:parseInt(correctVal)),
+    explanation:document.getElementById('q_exp').value.trim(),
+    difficulty:parseInt(document.getElementById('q_diff').value)||3,
+    category:document.getElementById('q_cat')?.value||'general',
+    type:qType==='emoji'?'emoji':'text',
+    active:true
+  };
+
+  try{
+    await sb.rest('questions',{method:'POST',body:q});
+    showToast('✅ Question added to DB!','success');
+    // Clear form
+    ['q_text','q_options','q_exp','q_correct'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.value='';
+    });
+  }catch(e){
+    showToast('❌ Error: '+e.message,'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════
+function pageSettings(){
+  const s=SETTINGS;
+  return `
+    <div class="page-header">
+      <div class="page-title">Settings</div>
+      <div class="page-sub">Game configuration and general settings</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="section">
+        <div class="section-title" style="margin-bottom:12px">Game Settings</div>
+        <div class="form-card">
+          <div class="form-grid cols1">
+            <div class="field">
+              <div class="field-label">Game Name</div>
+              <input class="field-input" id="s_name" value="${s.gameName}">
+            </div>
+            <div class="field">
+              <div class="field-label">Share URL</div>
+              <input class="field-input" id="s_url" value="${s.shareUrl}" placeholder="https://yoursite.com">
+            </div>
+            <div class="field">
+              <div class="field-label">Timer (seconds per question)</div>
+              <input class="field-input" id="s_timer" type="number" value="${s.timerSeconds}" min="5" max="30">
+            </div>
+            <div class="field">
+              <div class="field-label">Free Mode Questions</div>
+              <input class="field-input" id="s_free_q" type="number" value="${s.freeQuestions}" min="5" max="20">
+            </div>
+            <div class="field">
+              <div class="field-label">Challenge Levels</div>
+              <input class="field-input" id="s_challenge_lvl" type="number" value="${s.challengeLevels}" min="5" max="15">
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:14px" onclick="saveSettings()">Save Settings</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:12px">Maintenance Mode</div>
+        <div class="form-card">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px">When enabled, players see a maintenance message and cannot play. Use during updates.</p>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+            <span style="font-size:13px;font-weight:600">${s.maintenanceMode?'🔴 Currently ON':'🟢 Currently OFF'}</span>
+          </div>
+          <button class="btn ${s.maintenanceMode?'btn-success':'btn-danger'}" onclick="toggleMaintenance()">
+            ${s.maintenanceMode?'Turn Off Maintenance':'Turn On Maintenance'}
+          </button>
+        </div>
+
+        <div class="section-title" style="margin-bottom:12px;margin-top:20px">Data Management</div>
+        <div class="form-card">
+          <p style="font-size:13px;color:var(--muted);margin-bottom:14px">Reset admin configuration to defaults. Player data is not affected.</p>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost" onclick="exportConfig()">Export Config</button>
+            <button class="btn btn-danger" onclick="resetConfig()">Reset to Defaults</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function saveSettings(){
+  SETTINGS={
+    gameName:document.getElementById('s_name').value||'Odd One Out',
+    shareUrl:document.getElementById('s_url').value||'https://oddoneout.app',
+    timerSeconds:parseInt(document.getElementById('s_timer').value)||10,
+    freeQuestions:parseInt(document.getElementById('s_free_q').value)||12,
+    challengeLevels:parseInt(document.getElementById('s_challenge_lvl').value)||10,
+    maintenanceMode:SETTINGS.maintenanceMode,
+  };
+  saveData('settings',SETTINGS);
+  try{localStorage.setItem('GAME_SETTINGS',JSON.stringify(SETTINGS));}catch(e){}
+  showToast('✅ Settings saved!','success');
+}
+
+function toggleMaintenance(){
+  SETTINGS.maintenanceMode=!SETTINGS.maintenanceMode;
+  saveData('settings',SETTINGS);
+  showToast(SETTINGS.maintenanceMode?'🔴 Maintenance mode ON':'🟢 Maintenance mode OFF','success');
+  renderPage('settings');
+}
+
+function exportConfig(){
+  const config={competitions:COMPS,tokens:TOKEN_CFG,settings:SETTINGS};
+  const blob=new Blob([JSON.stringify(config,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oddoneout_config.json';a.click();
+  showToast('📥 Config exported','success');
+}
+
+function resetConfig(){
+  if(!confirm('Reset all config to defaults?'))return;
+  COMPS=DEFAULT_COMPS;TOKEN_CFG=DEFAULT_TOKEN_CONFIG;SETTINGS=DEFAULT_SETTINGS;
+  saveData('comps',COMPS);saveData('tokens',TOKEN_CFG);saveData('settings',SETTINGS);
+  showToast('✅ Config reset to defaults','success');
+  renderPage(currentPage);
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+(type||'');
+  setTimeout(()=>t.className='toast',2500);
+}
+
+// ═══════════════════════════════════════════════════
+// FORM BIND (for dynamic content)
+// ═══════════════════════════════════════════════════
+function bindFormEvents(){
+  // inputs already have inline handlers
+}
+
+// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+// ADMIN LOGIN
+// ═══════════════════════════════════════════════════
+function showAdminLogin(){
+  document.getElementById('main').innerHTML=`
+    <div class="page-header">
+      <div class="page-title">Admin Sign In</div>
+      <div class="page-sub">Sign in with your Supabase account to manage the game</div>
+    </div>
+    <div class="form-card" style="max-width:400px">
+      <div class="form-grid cols1">
+        <div class="field">
+          <div class="field-label">Email</div>
+          <input class="field-input" id="adminEmail" type="email" placeholder="your@email.com">
+        </div>
+        <div class="field">
+          <div class="field-label">Password</div>
+          <input class="field-input" id="adminPass" type="password" placeholder="••••••••">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="doAdminLogin()">Sign In</button>
+      </div>
+    </div>
+  `;
+}
+
+async function doAdminLogin(){
+  const email=document.getElementById('adminEmail').value.trim();
+  const pass=document.getElementById('adminPass').value;
+  if(!email||!pass){showToast('Enter email and password','error');return;}
+  showToast('Signing in...','');
+  try{
+    const data=await sb.signIn(email,pass);
+    if(data.error){showToast('❌ '+(data.error_description||data.error),'error');return;}
+    showToast('✅ Signed in!','success');
+    await loadRealData();
+    renderPage('dashboard');
+  }catch(e){showToast('❌ '+e.message,'error');}
+}
+
+function adminSignOut(){
+  sb.signOut();
+  showToast('Signed out','success');
+  renderPage('dashboard');
+}
+
+// ═══════════════════════════════════════════════════
+// INIT — Load real data from Supabase
+// ═══════════════════════════════════════════════════
+async function loadRealData(){
+  // Load competitions from DB
+  try{
+    const rows = await sb.rest('competitions',{
+      select:'*', order:'created_at.desc'
+    });
+    if(rows && rows.length > 0){
+      COMPS = rows.map(r=>({
+        id:r.id, name:r.name, type:r.type,
+        status:r.status, entryCost:r.entry_cost,
+        endDate:r.end_date, players:0, entries:0,
+        prize:{
+          type:r.prize_type, icon:r.prize_icon,
+          name:r.prize_name, value:r.prize_value
+        },
+        podium:r.podium||[],
+        created:r.created_at?.split('T')[0]
+      }));
+      saveData('comps',COMPS);
+    }
+  }catch(e){ console.warn('Could not load competitions:', e.message); }
+
+  // Load player count for dashboard
+  try{
+    const players = await sb.rest('players',{select:'id',limit:1000});
+    if(players) window._playerCount = players.length;
+  }catch(e){}
+}
+
+// Check if logged in via game session token
+if(sb.isLoggedIn()){
+  document.getElementById('adminAuthStatus').innerHTML='✅ DB Connected <a href="#" onclick="adminSignOut()" style="color:var(--accent2);margin-left:4px">Sign out</a>';
+  loadRealData().then(()=>renderPage('dashboard'));
+} else {
+  document.getElementById('adminAuthStatus').innerHTML='⚠️ <a href="#" onclick="showAdminLogin()" style="color:var(--accent)">Sign in to DB</a>';
+  renderPage('dashboard');
+}
+</script>
+</body>
+</html>
